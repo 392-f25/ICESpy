@@ -10,6 +10,9 @@
 
 # Concerns
  - People false reporting
+ - How much data do we want to collect from users
+ - How do we inform users of new sightings
+    - the server needs to know who to ping/inform when a new sighting occurs
 
 # Screens
  - Login screen
