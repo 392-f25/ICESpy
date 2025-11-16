@@ -7,13 +7,16 @@
     - determine relative closeness by ip code or distance?
  - Create an alert
  - profile (change zip)
+ - Upvoting sightings
 
 # Concerns
  - People false reporting
+ - How much data do we want to collect from users?
+   - would they be comfortable using the app
 
 # Screens
  - Login screen
-    - oauth: name, email + zip-code
+    - oauth?: name, email + zip-code
     - Grab zip through current location?
 
 - Map screen
