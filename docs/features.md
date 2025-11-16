@@ -7,6 +7,7 @@
     - determine relative closeness by ip code or distance?
  - Create an alert
  - profile (change zip)
+ - Upvoting sightings
 
 # Concerns
  - People false reporting
@@ -16,7 +17,7 @@
 
 # Screens
  - Login screen
-    - oauth: name, email + zip-code
+    - oauth?: name, email + zip-code
     - Grab zip through current location?
 
 - Map screen
