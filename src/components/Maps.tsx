@@ -1,4 +1,6 @@
 import React, { useEffect, useRef } from 'react';
+import { createRoot, Root } from 'react-dom/client';
+import SightingForm from './SightingForm';
 
 // Extend the Window interface to include google
 declare global {
@@ -16,6 +18,7 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
   const mapInstance = useRef<any>(null);
   const infoWindow = useRef<any>(null);
   const markers = useRef<any[]>([]);
+  const infoWindowRoot = useRef<Root | null>(null);
 
   const addICESightingMarker = async (
     position: any,
@@ -24,10 +27,7 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
     sightingData?: { info: string; image?: File }
   ) => {
     const iceIcon = document.createElement('div');
-    iceIcon.style.width = '12px';
-    iceIcon.style.height = '12px';
-    iceIcon.style.backgroundColor = '#000000';
-    iceIcon.style.borderRadius = '50%';
+    iceIcon.className = 'h-3 w-3 rounded-full bg-black';
 
     const pin = new PinElement({
       glyph: iceIcon,
@@ -48,12 +48,12 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
       if (infoWindow.current) {
         infoWindow.current.close();
         const content = sightingData ? 
-          `<div style="max-width: 250px;">
-            <strong>ICE Sighting</strong><br>
-            <small>Location: ${position.lat().toFixed(4)}, ${position.lng().toFixed(4)}</small><br>
-            <p style="margin: 8px 0;">${sightingData.info}</p>
+          `<div class="max-w-xs text-sm text-gray-900">
+            <div class="font-semibold text-gray-800">ICE Sighting</div>
+            <div class="text-[12px] text-gray-600">Location: ${position.lat().toFixed(4)}, ${position.lng().toFixed(4)}</div>
+            <p class="mt-2">${sightingData.info}</p>
           </div>` :
-          `Sighting at: ${position.lat().toFixed(4)}, ${position.lng().toFixed(4)}`;
+          `<div class="text-sm text-gray-800">Sighting at: ${position.lat().toFixed(4)}, ${position.lng().toFixed(4)}</div>`;
         infoWindow.current.setContent(content);
         infoWindow.current.open(mapInstance.current!, marker);
       }
@@ -65,84 +65,48 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
     const lat = position.lat().toFixed(6);
     const lng = position.lng().toFixed(6);
 
-    const formContent = `
-      <div style="width: 300px; padding: 10px; font-family: Arial, sans-serif;">
-        <h3 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">New ICE Sighting</h3>
-        
-        <div style="margin-bottom: 10px;">
-          <label style="display: block; font-weight: bold; margin-bottom: 3px; font-size: 12px;">Location:</label>
-          <input type="text" id="sighting-location" value="${lat}, ${lng}" 
-                 style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;" readonly>
-        </div>
-
-        <div style="margin-bottom: 10px;">
-          <label style="display: block; font-weight: bold; margin-bottom: 3px; font-size: 12px;">Time:</label>
-          <input type="text" id="sighting-time" value="${currentTime}" 
-                 style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;" readonly>
-        </div>
-
-        <div style="margin-bottom: 10px;">
-          <label style="display: block; font-weight: bold; margin-bottom: 3px; font-size: 12px;">Information:</label>
-          <textarea id="sighting-info" placeholder="Describe what you saw..." 
-                    style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; height: 60px; resize: vertical; font-size: 12px; font-family: Arial, sans-serif;"></textarea>
-        </div>
-
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; font-weight: bold; margin-bottom: 3px; font-size: 12px;">Image (optional):</label>
-          <input type="file" id="sighting-image" accept="image/*" 
-                 style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
-        </div>
-
-        <div style="display: flex; gap: 10px;">
-          <button id="submit-sighting" 
-                  style="flex: 1; padding: 8px 16px; background-color: #7b3effff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;">
-            Submit
-          </button>
-        </div>
-      </div>
-    `;
-
     if (infoWindow.current) {
-      infoWindow.current.setContent(formContent);
+      if (infoWindowRoot.current) {
+        infoWindowRoot.current.unmount();
+        infoWindowRoot.current = null;
+      }
+
+      const container = document.createElement('div');
+      const root = createRoot(container);
+      infoWindowRoot.current = root;
+
+      root.render(
+        <SightingForm
+          lat={lat}
+          lng={lng}
+          timestamp={currentTime}
+          onSubmit={({ info, image }) => {
+            addICESightingMarker(position, AdvancedMarkerElement, PinElement, {
+              info,
+              image,
+            });
+
+            infoWindow.current?.close();
+            console.log('Sighting submitted:', {
+              location: `${lat}, ${lng}`,
+              time: currentTime,
+              info,
+              hasImage: !!image,
+            });
+          }}
+          onCancel={() => infoWindow.current?.close()}
+        />
+      );
+
+      infoWindow.current.setContent(container);
       infoWindow.current.setPosition(position);
       infoWindow.current.open(mapInstance.current!);
 
-      // Add event listeners after the content is set
-      setTimeout(() => {
-        const submitBtn = document.getElementById('submit-sighting');
-        const cancelBtn = document.getElementById('cancel-sighting');
-        const infoTextarea = document.getElementById('sighting-info') as HTMLTextAreaElement;
-        const imageInput = document.getElementById('sighting-image') as HTMLInputElement;
-
-        if (submitBtn) {
-          submitBtn.addEventListener('click', () => {
-            const info = infoTextarea?.value || 'No additional information';
-            const imageFile = imageInput?.files?.[0];
-            
-            // Create the marker with the sighting data
-            addICESightingMarker(position, AdvancedMarkerElement, PinElement, { 
-              info, 
-              image: imageFile 
-            });
-            
-            // Close the form
-            infoWindow.current?.close();
-            
-            console.log('Sighting submitted:', { 
-              location: `${lat}, ${lng}`, 
-              time: currentTime, 
-              info,
-              hasImage: !!imageFile 
-            });
-          });
-        }
-
-        if (cancelBtn) {
-          cancelBtn.addEventListener('click', () => {
-            infoWindow.current?.close();
-          });
-        }
-      }, 100);
+      const closeListener = infoWindow.current.addListener('closeclick', () => {
+        infoWindowRoot.current?.unmount();
+        infoWindowRoot.current = null;
+        closeListener?.remove?.();
+      });
     }
   };
 
@@ -237,7 +201,9 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
       // Clean up markers and map instance if needed
       markers.current = [];
       mapInstance.current = null;
+      infoWindowRoot.current?.unmount();
       infoWindow.current = null;
+      infoWindowRoot.current = null;
     };
   }, []);
 

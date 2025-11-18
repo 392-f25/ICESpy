@@ -1,0 +1,169 @@
+   2: 
+   3: // Extend the Window interface to include google
+   6:     google: any;
+   9: 
+  11:   className?: string;
+  13: 
+  15:   const mapRef = useRef<HTMLDivElement>(null);
+  16:   const mapInstance = useRef<any>(null);
+  17:   const infoWindow = useRef<any>(null);
+  18:   const markers = useRef<any[]>([]);
+  19: 
+  20:   const addICESightingMarker = async (
+  21:     position: any,
+  22:     AdvancedMarkerElement: any,
+  23:     PinElement: any,
+  26:     const iceIcon = document.createElement('div');
+  27:     iceIcon.style.width = '12px';
+  28:     iceIcon.style.height = '12px';
+  29:     iceIcon.style.backgroundColor = '#000000';
+  30:     iceIcon.style.borderRadius = '50%';
+  31: 
+  33:       glyph: iceIcon,
+  34:       background: '#ff0000ff',
+  35:       borderColor: '#000000ff'
+  37: 
+  39:       map: mapInstance.current!,
+  40:       position: position,
+  41:       content: pin.element,
+  42:       title: 'ICE Sighting'
+  44: 
+  45:     markers.current.push(marker);
+  46: 
+  49:         infoWindow.current.close();
+  50:         const content = sightingData ? 
+  51:           `<div style="max-width: 250px;">
+  52:             <strong>ICE Sighting</strong><br>
+  55:           </div>` :
+  57:         infoWindow.current.setContent(content);
+  58:         infoWindow.current.open(mapInstance.current!, marker);
+  62: 
+  64:     const currentTime = new Date().toLocaleString();
+  65:     const lat = position.lat().toFixed(6);
+  66:     const lng = position.lng().toFixed(6);
+  67: 
+  68:     const formContent = `
+  69:       <div style="width: 300px; padding: 10px; font-family: Arial, sans-serif;">
+  70:         <h3 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">New ICE Sighting</h3>
+  71:         
+  72:         <div style="margin-bottom: 10px;">
+  73:           <label style="display: block; font-weight: bold; margin-bottom: 3px; font-size: 12px;">Location:</label>
+  75:                  style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;" readonly>
+  76:         </div>
+  77: 
+  78:         <div style="margin-bottom: 10px;">
+  79:           <label style="display: block; font-weight: bold; margin-bottom: 3px; font-size: 12px;">Time:</label>
+  81:                  style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;" readonly>
+  82:         </div>
+  83: 
+  84:         <div style="margin-bottom: 10px;">
+  85:           <label style="display: block; font-weight: bold; margin-bottom: 3px; font-size: 12px;">Information:</label>
+  86:           <textarea id="sighting-info" placeholder="Describe what you saw..." 
+  87:                     style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; height: 60px; resize: vertical; font-size: 12px; font-family: Arial, sans-serif;"></textarea>
+  88:         </div>
+  89: 
+  90:         <div style="margin-bottom: 15px;">
+  91:           <label style="display: block; font-weight: bold; margin-bottom: 3px; font-size: 12px;">Image (optional):</label>
+  92:           <input type="file" id="sighting-image" accept="image/*" 
+  93:                  style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
+  94:         </div>
+  95: 
+  96:         <div style="display: flex; gap: 10px;">
+  97:           <button id="submit-sighting" 
+  98:                   style="flex: 1; padding: 8px 16px; background-color: #7b3effff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;">
+  99:             Submit
+ 100:           </button>
+ 101:         </div>
+ 102:       </div>
+ 103:     `;
+ 104: 
+ 106:       infoWindow.current.setContent(formContent);
+ 107:       infoWindow.current.setPosition(position);
+ 108:       infoWindow.current.open(mapInstance.current!);
+ 109: 
+ 110:       // Add event listeners after the content is set
+ 112:         const submitBtn = document.getElementById('submit-sighting');
+ 113:         const cancelBtn = document.getElementById('cancel-sighting');
+ 114:         const infoTextarea = document.getElementById('sighting-info') as HTMLTextAreaElement;
+ 115:         const imageInput = document.getElementById('sighting-image') as HTMLInputElement;
+ 116: 
+ 119:             const info = infoTextarea?.value || 'No additional information';
+ 120:             const imageFile = imageInput?.files?.[0];
+ 121:             
+ 122:             // Create the marker with the sighting data
+ 124:               info, 
+ 125:               image: imageFile 
+ 127:             
+ 128:             // Close the form
+ 129:             infoWindow.current?.close();
+ 130:             
+ 133:               time: currentTime, 
+ 134:               info,
+ 135:               hasImage: !!imageFile 
+ 139: 
+ 142:             infoWindow.current?.close();
+ 148: 
+ 150:     if (!mapRef.current) return;
+ 151: 
+ 155: 
+ 156:       // Function to get user location with permission
+ 160:             reject(new Error('Geolocation is not supported by this browser.'));
+ 161:             return;
+ 163: 
+ 164:           navigator.geolocation.getCurrentPosition(
+ 167:                 lat: position.coords.latitude,
+ 168:                 lng: position.coords.longitude,
+ 172:               console.log("Geolocation error:", error.message);
+ 173:               reject(error);
+ 176:               enableHighAccuracy: true,
+ 177:               timeout: 10000,
+ 178:               maximumAge: 600000 // 10 minutes
+ 180:           );
+ 183: 
+ 184:       // Try to get user's location first, fallback to Evanston
+ 186:       let initialZoom = 10;
+ 187: 
+ 189:         const userLocation = await getUserLocation();
+ 190:         mapCenter = userLocation;
+ 191:         initialZoom = 15;
+ 192:         console.log("Using user's location:", userLocation);
+ 194:         console.log("Using default location (Evanston):", error);
+ 196: 
+ 198:         center: mapCenter,
+ 199:         zoom: initialZoom,
+ 200:         mapId: 'DEMO_MAP_ID',
+ 201:         gestureHandling: 'greedy',
+ 202:         streetViewControl: false, // Disable Pegman
+ 203:         fullscreenControl: false, // Disable fullscreen button
+ 204:         mapTypeControl: false, // Also disable map type control (optional)
+ 205:         zoomControl: true, // Keep zoom controls
+ 206:         rotateControl: false // Disable rotate control (optional)
+ 208: 
+ 209:       infoWindow.current = new InfoWindow();
+ 210: 
+ 213:           showSightingForm(event.latLng, AdvancedMarkerElement, PinElement);
+ 216: 
+ 218:       console.error('Error initializing Google Maps:', error);
+ 221: 
+ 223:     // Wait for Google Maps to be loaded
+ 226:         initMap();
+ 228:         // If Google Maps is not loaded yet, wait and try again
+ 229:         setTimeout(checkGoogleMaps, 100);
+ 232: 
+ 233:     checkGoogleMaps();
+ 234: 
+ 235:     // Cleanup function
+ 237:       // Clean up markers and map instance if needed
+ 238:       markers.current = [];
+ 239:       mapInstance.current = null;
+ 240:       infoWindow.current = null;
+ 243: 
+ 244:   return (
+ 245:     <div className="relative w-full h-full">
+ 247:       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white py-2 px-4 rounded-lg shadow-lg z-10 text-sm">
+ 248:         Click on the map to add a pin for an ICE sighting.
+ 249:       </div>
+ 250:     </div>
+ 251:   );
+ 253: 
+ 254: export default Maps;
