@@ -3,7 +3,7 @@ import Maps from './components/Maps'
 const App = () => {
     return (
       <div className="w-screen h-screen flex flex-col">
-        <header className="bg-blue-600 text-white p-4 shadow-md">
+        <header className="bg-[#4E2A84] text-white p-4 shadow-md">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold">ICE Spy</h1>
           </div>
