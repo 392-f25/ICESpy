@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import SightingForm from './SightingForm';
+import { createPinMarker } from './Pin';
+import SightingCard from './SightingCard';
 
 // Extend the Window interface to include google
 declare global {
@@ -26,38 +28,38 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
     PinElement: any,
     sightingData?: { info: string; image?: File }
   ) => {
-    const iceIcon = document.createElement('div');
-    iceIcon.className = 'h-3 w-3 rounded-full bg-black';
-
-    const pin = new PinElement({
-      glyph: iceIcon,
-      background: '#ff0000ff',
-      borderColor: '#000000ff'
-    });
-
-    const marker = new AdvancedMarkerElement({
+    const marker = createPinMarker({
+      position,
+      AdvancedMarkerElement,
+      PinElement,
       map: mapInstance.current!,
-      position: position,
-      content: pin.element,
-      title: 'ICE Sighting'
+      onClick: () => {
+        if (infoWindow.current) {
+          infoWindow.current.close();
+          
+          if (sightingData) {
+            const container = document.createElement('div');
+            const root = createRoot(container);
+            root.render(
+              <SightingCard
+                lat={position.lat().toFixed(4)}
+                lng={position.lng().toFixed(4)}
+                info={sightingData.info}
+              />
+            );
+            infoWindow.current.setContent(container);
+          } else {
+            const content = `<div class="text-sm text-gray-800">Sighting at: ${position.lat().toFixed(4)}, ${position.lng().toFixed(4)}</div>`;
+            infoWindow.current.setContent(content);
+          }
+          
+          infoWindow.current.open(mapInstance.current!, marker);
+        }
+      },
+      sightingData,
     });
 
     markers.current.push(marker);
-
-    marker.addListener('click', () => {
-      if (infoWindow.current) {
-        infoWindow.current.close();
-        const content = sightingData ? 
-          `<div class="max-w-xs text-sm text-gray-900">
-            <div class="font-semibold text-gray-800">ICE Sighting</div>
-            <div class="text-[12px] text-gray-600">Location: ${position.lat().toFixed(4)}, ${position.lng().toFixed(4)}</div>
-            <p class="mt-2">${sightingData.info}</p>
-          </div>` :
-          `<div class="text-sm text-gray-800">Sighting at: ${position.lat().toFixed(4)}, ${position.lng().toFixed(4)}</div>`;
-        infoWindow.current.setContent(content);
-        infoWindow.current.open(mapInstance.current!, marker);
-      }
-    });
   };
 
   const showSightingForm = (position: any, AdvancedMarkerElement: any, PinElement: any) => {
