@@ -1,8 +1,9 @@
-import React, { useEffect, useRef } from 'react';
-import { createRoot, Root } from 'react-dom/client';
+import React, { useEffect, useRef, useState } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
 import SightingForm from './SightingForm';
 import { createPinMarker } from './Pin';
 import SightingCard from './SightingCard';
+import type { Sighting } from '../types/sighting';
 
 // Extend the Window interface to include google
 declare global {
@@ -21,12 +22,13 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
   const infoWindow = useRef<any>(null);
   const markers = useRef<any[]>([]);
   const infoWindowRoot = useRef<Root | null>(null);
+  const [_sightings, setSightings] = useState<Map<string, Sighting>>(new Map());
 
   const addICESightingMarker = async (
     position: any,
     AdvancedMarkerElement: any,
     PinElement: any,
-    sightingData?: { info: string; image?: File }
+    sighting: Sighting
   ) => {
     const marker = createPinMarker({
       position,
@@ -37,29 +39,35 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
         if (infoWindow.current) {
           infoWindow.current.close();
           
-          if (sightingData) {
-            const container = document.createElement('div');
-            const root = createRoot(container);
-            root.render(
-              <SightingCard
-                lat={position.lat().toFixed(4)}
-                lng={position.lng().toFixed(4)}
-                info={sightingData.info}
-              />
-            );
-            infoWindow.current.setContent(container);
-          } else {
-            const content = `<div class="text-sm text-gray-800">Sighting at: ${position.lat().toFixed(4)}, ${position.lng().toFixed(4)}</div>`;
-            infoWindow.current.setContent(content);
-          }
-          
+          const container = document.createElement('div');
+          const root = createRoot(container);
+          root.render(
+            <SightingCard
+              sighting={sighting}
+              onCorroborate={(sightingId) => {
+                setSightings(prev => {
+                  const updated = new Map(prev);
+                  const existingSighting = updated.get(sightingId);
+                  if (existingSighting) {
+                    updated.set(sightingId, {
+                      ...existingSighting,
+                      corroborationCount: existingSighting.corroborationCount + 1
+                    });
+                  }
+                  return updated;
+                });
+              }}
+            />
+          );
+          infoWindow.current.setContent(container);
           infoWindow.current.open(mapInstance.current!, marker);
         }
       },
-      sightingData,
+      sightingData: sighting,
     });
 
     markers.current.push(marker);
+    setSightings(prev => new Map(prev.set(sighting.id, sighting)));
   };
 
   const showSightingForm = (position: any, AdvancedMarkerElement: any, PinElement: any) => {
@@ -82,18 +90,28 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
           lat={lat}
           lng={lng}
           timestamp={currentTime}
-          onSubmit={({ info, image }) => {
-            addICESightingMarker(position, AdvancedMarkerElement, PinElement, {
-              info,
-              image,
-            });
+          onSubmit={({ title, description, images, zipCode }) => {
+            const sighting: Sighting = {
+              id: `sighting-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              title,
+              location: `${lat}, ${lng}`,
+              zipCode,
+              time: new Date(),
+              description,
+              imageUrls: images ? images.map(file => URL.createObjectURL(file)) : undefined,
+              corroborationCount: 0
+            };
+
+            addICESightingMarker(position, AdvancedMarkerElement, PinElement, sighting);
 
             infoWindow.current?.close();
             console.log('Sighting submitted:', {
               location: `${lat}, ${lng}`,
               time: currentTime,
-              info,
-              hasImage: !!image,
+              title,
+              description,
+              zipCode,
+              hasImages: !!(images && images.length > 0),
             });
           }}
           onCancel={() => infoWindow.current?.close()}

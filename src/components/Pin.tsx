@@ -1,4 +1,4 @@
-import React from 'react';
+import type { Sighting } from '../types/sighting';
 
 interface PinProps {
   position: { lat: number; lng: number };
@@ -6,7 +6,7 @@ interface PinProps {
   PinElement: any;
   map: any;
   onClick: () => void;
-  sightingData?: { info: string; image?: File };
+  sightingData?: Sighting;
 }
 
 export const createPinMarker = ({
@@ -15,7 +15,6 @@ export const createPinMarker = ({
   PinElement,
   map,
   onClick,
-  sightingData,
 }: PinProps) => {
   const iceIcon = document.createElement('div');
   iceIcon.className = 'h-3 w-3 rounded-full bg-black';
