@@ -24,6 +24,7 @@
   - Clicking on landmarks gives you Google's own modal about the landmark rather than dropping a pin. Should we remove this?
 
 ## Future Features
+- Get cross-device sync using database working
 - Filtering based on:
   - Distance
   - Selected zip codes
