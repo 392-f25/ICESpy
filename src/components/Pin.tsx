@@ -1,4 +1,4 @@
-import type { Sighting } from '../types/sighting';
+import type { Sighting } from '../types/Sighting.ts';
 
 interface PinProps {
   position: { lat: number; lng: number };

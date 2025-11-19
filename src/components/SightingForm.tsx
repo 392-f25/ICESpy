@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Sighting } from '../types/sighting';
+import type { Sighting } from '../types/Sighting.ts';
 
 interface SightingFormProps {
   lat: string;

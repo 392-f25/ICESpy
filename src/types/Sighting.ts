@@ -1,5 +1,4 @@
 export type Sighting ={
-
     id: string;
     title: string;
     location: string;
@@ -8,6 +7,5 @@ export type Sighting ={
     description?: string;
     imageUrls?: string[];
     corroborationCount: number;
-
 }
 

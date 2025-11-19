@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import SightingForm from './SightingForm';
-import { createPinMarker } from './Pin';
-import SightingCard from './SightingCard';
-import type { Sighting } from '../types/sighting';
+import SightingForm from './SightingForm.tsx';
+import { createPinMarker } from './Pin.tsx';
+import SightingCard from './SightingCard.tsx';
+import type { Sighting } from '../types/Sighting.ts';
 
 // Extend the Window interface to include google
 declare global {
