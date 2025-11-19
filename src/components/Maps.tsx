@@ -4,6 +4,7 @@ import SightingForm from './SightingForm.tsx';
 import { createPinMarker } from './Pin.tsx';
 import SightingCard from './SightingCard.tsx';
 import type { Sighting } from '../types/Sighting.ts';
+import { useSightings, addSighting, corroborateSighting, useAuthState } from '../utilities/firebase.ts';
 
 // Extend the Window interface to include google
 declare global {
@@ -20,16 +21,21 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const infoWindow = useRef<any>(null);
-  const markers = useRef<any[]>([]);
+  const markers = useRef<Map<string, any>>(new Map());
   const infoWindowRoot = useRef<Root | null>(null);
-  const [_sightings, setSightings] = useState<Map<string, Sighting>>(new Map());
+  const [sightings, sightingsLoading] = useSightings();
+  const { user } = useAuthState();
+  const [mapLibraries, setMapLibraries] = useState<{ AdvancedMarkerElement: any; PinElement: any } | null>(null);
 
-  const addICESightingMarker = async (
-    position: any,
+  const addICESightingMarker = (
+    sighting: Sighting,
     AdvancedMarkerElement: any,
-    PinElement: any,
-    sighting: Sighting
+    PinElement: any
   ) => {
+    // Parse location string to get lat/lng
+    const [lat, lng] = sighting.location.split(', ').map(Number);
+    const position = { lat, lng };
+
     const marker = createPinMarker({
       position,
       AdvancedMarkerElement,
@@ -44,18 +50,10 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
           root.render(
             <SightingCard
               sighting={sighting}
-              onCorroborate={(sightingId) => {
-                setSightings(prev => {
-                  const updated = new Map(prev);
-                  const existingSighting = updated.get(sightingId);
-                  if (existingSighting) {
-                    updated.set(sightingId, {
-                      ...existingSighting,
-                      corroborationCount: existingSighting.corroborationCount + 1
-                    });
-                  }
-                  return updated;
-                });
+              onCorroborate={async (sightingId) => {
+                if (user) {
+                  await corroborateSighting(sightingId, user.uid);
+                }
               }}
             />
           );
@@ -66,8 +64,7 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
       sightingData: sighting,
     });
 
-    markers.current.push(marker);
-    setSightings(prev => new Map(prev.set(sighting.id, sighting)));
+    markers.current.set(sighting.id, marker);
   };
 
   const showSightingForm = (position: any, AdvancedMarkerElement: any, PinElement: any) => {
@@ -90,29 +87,30 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
           lat={lat}
           lng={lng}
           timestamp={currentTime}
-          onSubmit={({ title, description, images, zipCode }) => {
-            const sighting: Sighting = {
-              id: `sighting-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-              title,
-              location: `${lat}, ${lng}`,
-              zipCode,
-              time: new Date(),
-              description,
-              imageUrls: images ? images.map(file => URL.createObjectURL(file)) : undefined,
-              corroborationCount: 0
-            };
+          onSubmit={async ({ title, description, images, zipCode }) => {
+            try {
+              const sightingId = await addSighting({
+                title,
+                location: `${lat}, ${lng}`,
+                zipCode,
+                time: new Date(),
+                description,
+              }, images);
 
-            addICESightingMarker(position, AdvancedMarkerElement, PinElement, sighting);
-
-            infoWindow.current?.close();
-            console.log('Sighting submitted:', {
-              location: `${lat}, ${lng}`,
-              time: currentTime,
-              title,
-              description,
-              zipCode,
-              hasImages: !!(images && images.length > 0),
-            });
+              infoWindow.current?.close();
+              console.log('Sighting submitted:', {
+                id: sightingId,
+                location: `${lat}, ${lng}`,
+                time: currentTime,
+                title,
+                description,
+                zipCode,
+                hasImages: !!(images && images.length > 0),
+              });
+            } catch (error) {
+              console.error('Error submitting sighting:', error);
+              alert('Failed to submit sighting. Please try again.');
+            }
           }}
           onCancel={() => infoWindow.current?.close()}
         />
@@ -136,6 +134,8 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
     try {
       const { Map, InfoWindow } = await window.google.maps.importLibrary("maps");
       const { AdvancedMarkerElement, PinElement } = await window.google.maps.importLibrary("marker");
+      
+      setMapLibraries({ AdvancedMarkerElement, PinElement });
 
       // Function to get user location with permission
       const getUserLocation = (): Promise<{ lat: number; lng: number }> => {
@@ -219,13 +219,36 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
     // Cleanup function
     return () => {
       // Clean up markers and map instance if needed
-      markers.current = [];
+      markers.current.clear();
       mapInstance.current = null;
       infoWindowRoot.current?.unmount();
       infoWindow.current = null;
       infoWindowRoot.current = null;
     };
   }, []);
+
+  // Effect to load sightings from Firebase and create markers
+  useEffect(() => {
+    if (!mapInstance.current || !mapLibraries || sightingsLoading) return;
+
+    const { AdvancedMarkerElement, PinElement } = mapLibraries;
+
+    // Clear existing markers that are no longer in the sightings list
+    const currentSightingIds = new Set(sightings.map(s => s.id));
+    markers.current.forEach((marker, id) => {
+      if (!currentSightingIds.has(id)) {
+        marker.map = null; // Remove marker from map
+        markers.current.delete(id);
+      }
+    });
+
+    // Add or update markers for all sightings
+    sightings.forEach(sighting => {
+      if (!markers.current.has(sighting.id)) {
+        addICESightingMarker(sighting, AdvancedMarkerElement, PinElement);
+      }
+    });
+  }, [sightings, sightingsLoading, mapLibraries]);
 
   return (
     <div className="relative w-full h-full">
