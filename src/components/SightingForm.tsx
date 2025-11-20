@@ -24,7 +24,6 @@ const SightingForm: React.FC<SightingFormProps> = ({
   onCancel,
   existingSighting,
 }) => {
-  const [title, setTitle] = useState(existingSighting?.title || '');
   const [description, setDescription] = useState(existingSighting?.description || '');
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [location, setLocation] = useState<string>(`${lat}, ${lng}`);
@@ -33,7 +32,7 @@ const SightingForm: React.FC<SightingFormProps> = ({
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     onSubmit({
-      title: title.trim() || 'ICE Sighting',
+      title: 'ICE Sighting',
       description: description.trim() || 'No additional information',
       images: imageFiles.length > 0 ? imageFiles : undefined,
       location: location.trim(),
