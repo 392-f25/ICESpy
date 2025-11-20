@@ -40,7 +40,6 @@ const SightingCard: React.FC<SightingCardProps> = ({
       
       <div className="mb-2 space-y-1 text-[12px] text-gray-600">
         <div>Location: {sighting.location}</div>
-        {sighting.zipCode && <div>ZIP: {sighting.zipCode}</div>}
         <div>Time: {formatDate(sighting.time)}</div>
       </div>
       

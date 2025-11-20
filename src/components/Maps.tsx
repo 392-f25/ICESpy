@@ -22,7 +22,58 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
   const infoWindow = useRef<any>(null);
   const markers = useRef<any[]>([]);
   const infoWindowRoot = useRef<Root | null>(null);
-  const [_sightings, setSightings] = useState<Map<string, Sighting>>(new Map());
+  const [sightings, setSightings] = useState<Map<string, Sighting>>(new Map());
+
+  // Helper function to create and setup React components in InfoWindow
+  const renderInInfoWindow = (component: React.ReactElement, position?: any) => {
+    if (!infoWindow.current) return;
+
+    // Clean up existing root
+    if (infoWindowRoot.current) {
+      infoWindowRoot.current.unmount();
+      infoWindowRoot.current = null;
+    }
+
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    infoWindowRoot.current = root;
+
+    root.render(component);
+    infoWindow.current.setContent(container);
+    
+    if (position) {
+      infoWindow.current.setPosition(position);
+    }
+    
+    infoWindow.current.open(mapInstance.current!);
+
+    // Setup cleanup listener
+    const closeListener = infoWindow.current.addListener('closeclick', () => {
+      infoWindowRoot.current?.unmount();
+      infoWindowRoot.current = null;
+      closeListener?.remove?.();
+    });
+  };
+
+  // Helper function to generate unique ID
+  const generateSightingId = () => 
+    `sighting-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+  // Helper function to update sighting corroboration
+  const handleCorroboration = (sightingId: string) => {
+    setSightings(prev => {
+      const updated = new Map(prev);
+      const existingSighting = updated.get(sightingId);
+      if (existingSighting) {
+        updated.set(sightingId, {
+          ...existingSighting,
+          corroborationCount: existingSighting.corroborationCount + 1
+        });
+      }
+      console.log(`Total sightings: ${updated.size}`);
+      return updated;
+    });
+  };
 
   const addICESightingMarker = async (
     position: any,
@@ -39,28 +90,12 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
         if (infoWindow.current) {
           infoWindow.current.close();
           
-          const container = document.createElement('div');
-          const root = createRoot(container);
-          root.render(
+          renderInInfoWindow(
             <SightingCard
               sighting={sighting}
-              onCorroborate={(sightingId) => {
-                setSightings(prev => {
-                  const updated = new Map(prev);
-                  const existingSighting = updated.get(sightingId);
-                  if (existingSighting) {
-                    updated.set(sightingId, {
-                      ...existingSighting,
-                      corroborationCount: existingSighting.corroborationCount + 1
-                    });
-                  }
-                  return updated;
-                });
-              }}
+              onCorroborate={handleCorroboration}
             />
           );
-          infoWindow.current.setContent(container);
-          infoWindow.current.open(mapInstance.current!, marker);
         }
       },
       sightingData: sighting,
@@ -75,59 +110,38 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
     const lat = position.lat().toFixed(6);
     const lng = position.lng().toFixed(6);
 
-    if (infoWindow.current) {
-      if (infoWindowRoot.current) {
-        infoWindowRoot.current.unmount();
-        infoWindowRoot.current = null;
-      }
+    renderInInfoWindow(
+      <SightingForm
+        lat={lat}
+        lng={lng}
+        timestamp={currentTime}
+        onSubmit={({ title, description, images, location }) => {
+          const sighting: Sighting = {
+            id: generateSightingId(),
+            title,
+            location,
+            time: new Date(),
+            description,
+            imageUrls: images ? images.map(file => URL.createObjectURL(file)) : undefined,
+            corroborationCount: 0
+          };
 
-      const container = document.createElement('div');
-      const root = createRoot(container);
-      infoWindowRoot.current = root;
-
-      root.render(
-        <SightingForm
-          lat={lat}
-          lng={lng}
-          timestamp={currentTime}
-          onSubmit={({ title, description, images, zipCode }) => {
-            const sighting: Sighting = {
-              id: `sighting-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-              title,
-              location: `${lat}, ${lng}`,
-              zipCode,
-              time: new Date(),
-              description,
-              imageUrls: images ? images.map(file => URL.createObjectURL(file)) : undefined,
-              corroborationCount: 0
-            };
-
-            addICESightingMarker(position, AdvancedMarkerElement, PinElement, sighting);
-
-            infoWindow.current?.close();
-            console.log('Sighting submitted:', {
-              location: `${lat}, ${lng}`,
-              time: currentTime,
-              title,
-              description,
-              zipCode,
-              hasImages: !!(images && images.length > 0),
-            });
-          }}
-          onCancel={() => infoWindow.current?.close()}
-        />
-      );
-
-      infoWindow.current.setContent(container);
-      infoWindow.current.setPosition(position);
-      infoWindow.current.open(mapInstance.current!);
-
-      const closeListener = infoWindow.current.addListener('closeclick', () => {
-        infoWindowRoot.current?.unmount();
-        infoWindowRoot.current = null;
-        closeListener?.remove?.();
-      });
-    }
+          addICESightingMarker(position, AdvancedMarkerElement, PinElement, sighting);
+          infoWindow.current?.close();
+          
+          console.log('Sighting submitted:', {
+            location: `${lat}, ${lng}`,
+            time: currentTime,
+            title,
+            description,
+            address: location,
+            hasImages: !!(images && images.length > 0),
+          });
+        }}
+        onCancel={() => infoWindow.current?.close()}
+      />,
+      position
+    );
   };
 
   const initMap = async () => {
@@ -224,6 +238,7 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
       infoWindowRoot.current?.unmount();
       infoWindow.current = null;
       infoWindowRoot.current = null;
+      console.log(`Cleaned up map with ${sightings.size} sightings`);
     };
   }, []);
 
