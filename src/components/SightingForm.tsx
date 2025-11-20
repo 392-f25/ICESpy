@@ -5,7 +5,7 @@ import { getAddressFromCoords } from './Address.tsx';
 interface SightingFormProps {
   lat: string;
   lng: string;
-  timestamp: string;
+  timestamp: Date;
   onSubmit: (data: { 
     title: string; 
     description: string; 
@@ -28,6 +28,7 @@ const SightingForm: React.FC<SightingFormProps> = ({
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [location, setLocation] = useState<string>(`${lat}, ${lng}`);
   const [loading, setLoading] = useState<boolean>(true);
+  const [time, setTime] = useState<Date>(timestamp);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -83,7 +84,8 @@ const SightingForm: React.FC<SightingFormProps> = ({
         <input
           type="text"
           value={loading ? 'Loading address...' : location}
-          onChange={(event) => setLocation(event.target.value)}
+          // onChange={(event) => setLocation(event.target.value)}
+          readOnly
           className="w-full rounded border border-gray-200 bg-gray-50 px-1 py-1 text-[11px]"
         />
       </div>
@@ -94,8 +96,8 @@ const SightingForm: React.FC<SightingFormProps> = ({
         </label>
         <input
           type="text"
-          value={timestamp}
-          readOnly
+          value={time.toLocaleString()}
+          onChange={(e) => setTime(new Date(e.target.value))}
           className="w-full rounded border border-gray-200 bg-gray-50 px-1 py-1 text-[11px]"
         />
       </div>

@@ -106,7 +106,7 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
   };
 
   const showSightingForm = (position: any, AdvancedMarkerElement: any, PinElement: any) => {
-    const currentTime = new Date().toLocaleString();
+    const currentTime = new Date();
     const lat = position.lat().toFixed(6);
     const lng = position.lng().toFixed(6);
 
