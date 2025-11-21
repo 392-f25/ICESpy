@@ -143,7 +143,7 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
   };
 
   const showSightingForm = (position: any, AdvancedMarkerElement: any, PinElement: any) => {
-    const currentTime = new Date().toLocaleString();
+    const currentTime = new Date();
     const lat = position.lat().toFixed(6);
     const lng = position.lng().toFixed(6);
 
@@ -159,7 +159,7 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
             id: sightingId,
             title,
             location,
-            time: new Date(),
+            time,
             description,
             imageUrls: images ? images.map(file => URL.createObjectURL(file)) : undefined,
             corroborationCount: 0
