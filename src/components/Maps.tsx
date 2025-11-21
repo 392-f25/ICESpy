@@ -115,12 +115,12 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
         lat={lat}
         lng={lng}
         timestamp={currentTime}
-        onSubmit={({ title, description, images, location }) => {
+        onSubmit={({ title, location, time, description, images }) => {
           const sighting: Sighting = {
             id: generateSightingId(),
             title,
             location,
-            time: new Date(),
+            time,
             description,
             imageUrls: images ? images.map(file => URL.createObjectURL(file)) : undefined,
             corroborationCount: 0

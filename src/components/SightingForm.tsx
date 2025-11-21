@@ -9,11 +9,12 @@ interface SightingFormProps {
   lat: string;
   lng: string;
   timestamp: Date;
-  onSubmit: (data: { 
-    title: string; 
-    description: string; 
-    images?: File[]; 
+  onSubmit: (data: {
+    title: string;
     location: string;
+    time: Date;
+    description: string;
+    images?: File[];
   }) => void;
   onCancel: () => void;
   existingSighting?: Sighting;
@@ -23,7 +24,10 @@ interface SightingFormProps {
 const sightingSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   location: z.string().min(1, 'Location is required'),
-  time: z.string().min(1, 'Time is required'),
+  time: z.string().refine((s) => {
+    const d = new Date(s);
+    return !isNaN(d.getTime());
+  }, "Date must match format: 11/20/2025, 6:17 PM"),
   description: z.string().max(500, 'Description must be less than 500 characters').optional(),
   images: z.array(z.instanceof(File)).optional()
 });
@@ -64,11 +68,13 @@ const SightingForm = ({
   const description = watch('description');
 
   const onFormSubmit = (data: SightingFormData) => {
+    const timeToDate = new Date(data.time);
     onSubmit({
       title: data.title,
+      location: data.location,
+      time: timeToDate,
       description: data.description || 'No additional information',
       images: imageFiles.length > 0 ? imageFiles : undefined,
-      location: data.location,
     });
   };
 
