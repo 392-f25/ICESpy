@@ -159,7 +159,7 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
             id: sightingId,
             title,
             location,
-            time,
+            time: currentTime,
             description,
             imageUrls: images ? images.map(file => URL.createObjectURL(file)) : undefined,
             corroborationCount: 0
