@@ -1,7 +1,7 @@
 import { signInWithGoogle, signOutUser, useAuthState } from '../utilities/firebase';
 
 const AuthButton = () => {
-  const { user, isAuthenticated } = useAuthState();
+  const { isAuthenticated } = useAuthState();
 
   const label = isAuthenticated ? 'Log out' : 'Sign in';
 

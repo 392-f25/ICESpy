@@ -1,5 +1,6 @@
 import Maps from './components/Maps'
 import AuthButton from './components/AuthButton'
+import UserDebugInfo from './components/UserDebugInfo'
 
 const App = () => {
     return (
@@ -13,6 +14,7 @@ const App = () => {
         <div className="flex-1">
           <Maps className="w-full h-full" />
         </div>
+        <UserDebugInfo />
       </div>
     )
 }
