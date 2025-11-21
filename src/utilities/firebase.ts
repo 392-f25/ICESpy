@@ -101,7 +101,7 @@ export const getUserFromDatabase = async (uid: string): Promise<AppUser | null> 
 export const listenToSightings = (callback: (sightings: any[]) => void) => {
   const sightingsRef = dbRef(realtimeDb, 'sightings');
   
-  const unsubscribe = onValue(sightingsRef, (snapshot) => {
+  const unsubscribe = onValue(sightingsRef, (snapshot: any) => {
     const data = snapshot.val();
     if (data) {
       // Convert Firebase object to array
@@ -124,7 +124,7 @@ export const useAuthState = () => {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (nextUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (nextUser: User | null) => {
       setUser(nextUser);
       
       if (nextUser) {
