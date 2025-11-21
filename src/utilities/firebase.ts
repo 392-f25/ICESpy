@@ -7,6 +7,7 @@ import {
   signInWithPopup,
   signOut,
 } from 'firebase/auth';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getDatabase, push as pushToDb, ref as dbReference, serverTimestamp, set, get, onValue, off } from 'firebase/database';
 import type { User } from 'firebase/auth';
 import type { User as AppUser } from '../types/User';
@@ -25,6 +26,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 export const realtimeDb = getDatabase(app);
+export const storage =getStorage(app);
 
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: 'select_account' });
@@ -187,4 +189,27 @@ export const useCheckFirstTimeUser = (uid: string) => {
   }, [uid]);
 
   return { isFirstTime, isChecking };
+};
+
+export const uploadImage = async (file: File, sightingId: string): Promise<string> => {
+  try {
+    // Create a unique filename using timestamp and original filename
+    const timestamp = Date.now();
+    const filename = `${timestamp}-${file.name}`;
+    
+    // Create a reference to the file location in Firebase Storage
+    const imageRef = storageRef(storage, `sightings/${sightingId}/${filename}`);
+    
+    // Upload the file
+    const snapshot = await uploadBytes(imageRef, file);
+    
+    // Get the download URL
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    
+    console.log('Image uploaded successfully:', downloadURL);
+    return downloadURL;
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    throw error;
+  }
 };

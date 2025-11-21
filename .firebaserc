@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "icespy-c894b"
-  }
+    "default": "icespy-392",
+    "dev": "icespy-392"
+  },
+  "targets": {},
+  "etags": {}
 }

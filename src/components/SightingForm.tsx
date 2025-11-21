@@ -13,7 +13,7 @@ interface SightingFormProps {
     title: string;
     location: string;
     time: Date;
-    description: string;
+    description?: string;
     images?: File[];
   }) => void;
   onCancel: () => void;
