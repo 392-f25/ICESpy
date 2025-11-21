@@ -7,7 +7,7 @@ import {
   signInWithPopup,
   signOut,
 } from 'firebase/auth';
-import { getDatabase, push as pushToDb, ref as dbReference, serverTimestamp, set, get } from 'firebase/database';
+import { getDatabase, push as pushToDb, ref as dbReference, serverTimestamp, set, get, onValue, off } from 'firebase/database';
 import type { User } from 'firebase/auth';
 import type { User as AppUser } from '../types/User';
 
@@ -95,6 +95,28 @@ export const getUserFromDatabase = async (uid: string): Promise<AppUser | null> 
     console.error('Error getting user from database:', error);
     return null;
   }
+};
+
+// Real-time sightings listener
+export const listenToSightings = (callback: (sightings: any[]) => void) => {
+  const sightingsRef = dbRef(realtimeDb, 'sightings');
+  
+  const unsubscribe = onValue(sightingsRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      // Convert Firebase object to array
+      const sightingsArray = Object.entries(data).map(([key, value]: [string, any]) => ({
+        firebaseKey: key,
+        ...value,
+      }));
+      callback(sightingsArray);
+    } else {
+      callback([]);
+    }
+  });
+
+  // Return unsubscribe function
+  return () => off(sightingsRef, 'value', unsubscribe);
 };
 
 export const useAuthState = () => {
