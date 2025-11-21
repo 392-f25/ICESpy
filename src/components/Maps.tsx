@@ -4,7 +4,14 @@ import SightingForm from './SightingForm.tsx';
 import { createPinMarker } from './Pin.tsx';
 import SightingCard from './SightingCard.tsx';
 import type { Sighting } from '../types/Sighting.ts';
-import { dbPush, dbRef, dbServerTimestamp, realtimeDb, listenToSightings } from '../utilities/firebase';
+import {
+  dbPush,
+  dbRef,
+  dbServerTimestamp,
+  realtimeDb,
+  listenToSightings,
+  uploadImage,
+} from '../utilities/firebase';
 
 // Extend the Window interface to include google
 declare global {
@@ -17,7 +24,7 @@ interface MapsProps {
   className?: string;
 }
 
-const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
+const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const infoWindow = useRef<any>(null);
@@ -27,10 +34,15 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
   // track loaded firebase keys in a ref so updates don't trigger rerenders
   const loadedFirebaseSightingsRef = useRef<Set<string>>(new Set());
   const unsubscribeRef = useRef<(() => void) | null>(null);
-  const [newSightingNotification, setNewSightingNotification] = useState<string | null>(null);
+  const [newSightingNotification, setNewSightingNotification] = useState<
+    string | null
+  >(null);
 
   // Helper function to create and setup React components in InfoWindow
-  const renderInInfoWindow = (component: React.ReactElement, position?: any) => {
+  const renderInInfoWindow = (
+    component: React.ReactElement,
+    position?: any
+  ) => {
     if (!infoWindow.current) return;
 
     // Clean up existing root
@@ -45,11 +57,11 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
 
     root.render(component);
     infoWindow.current.setContent(container);
-    
+
     if (position) {
       infoWindow.current.setPosition(position);
     }
-    
+
     infoWindow.current.open(mapInstance.current!);
 
     // Setup cleanup listener
@@ -61,18 +73,18 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
   };
 
   // Helper function to generate unique ID
-  const generateSightingId = () => 
+  const generateSightingId = () =>
     `sighting-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
   // Helper function to update sighting corroboration
   const handleCorroboration = (sightingId: string) => {
-    setSightings(prev => {
+    setSightings((prev) => {
       const updated = new Map(prev);
       const existingSighting = updated.get(sightingId);
       if (existingSighting) {
         updated.set(sightingId, {
           ...existingSighting,
-          corroborationCount: existingSighting.corroborationCount + 1
+          corroborationCount: existingSighting.corroborationCount + 1,
         });
       }
       console.log(`Total sightings: ${updated.size}`);
@@ -88,24 +100,37 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
     }
 
     try {
-      const { AdvancedMarkerElement, PinElement } = await window.google.maps.importLibrary("marker");
-      
+      const { AdvancedMarkerElement, PinElement } =
+        await window.google.maps.importLibrary('marker');
+
       // Create position from lat/lng
-      const position = new window.google.maps.LatLng(firebaseSighting.lat, firebaseSighting.lng);
-      
+      const position = new window.google.maps.LatLng(
+        firebaseSighting.lat,
+        firebaseSighting.lng
+      );
+
       // Convert Firebase data to our Sighting format
       const sighting: Sighting = {
         id: firebaseSighting.id || firebaseSighting.firebaseKey,
         title: firebaseSighting.title || 'ICE Sighting',
-        location: firebaseSighting.location || `${firebaseSighting.lat}, ${firebaseSighting.lng}`,
-        time: firebaseSighting.submittedAt ? new Date(firebaseSighting.submittedAt) : new Date(),
+        location:
+          firebaseSighting.location ||
+          `${firebaseSighting.lat}, ${firebaseSighting.lng}`,
+        time: firebaseSighting.submittedAt
+          ? new Date(firebaseSighting.submittedAt)
+          : new Date(),
         description: firebaseSighting.description,
         imageUrls: firebaseSighting.imageUrls || undefined,
-        corroborationCount: firebaseSighting.corroborationCount || 0
+        corroborationCount: firebaseSighting.corroborationCount || 0,
       };
 
-      await addICESightingMarker(position, AdvancedMarkerElement, PinElement, sighting);
-      
+      await addICESightingMarker(
+        position,
+        AdvancedMarkerElement,
+        PinElement,
+        sighting
+      );
+
       console.log('Created marker for Firebase sighting:', sighting.id);
     } catch (error) {
       console.error('Error creating marker from Firebase data:', error);
@@ -116,7 +141,7 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
     position: any,
     AdvancedMarkerElement: any,
     PinElement: any,
-    sighting: Sighting
+    sighting: Sighting,
   ) => {
     const marker = createPinMarker({
       position,
@@ -126,7 +151,7 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
       onClick: () => {
         if (infoWindow.current) {
           infoWindow.current.close();
-          
+
           renderInInfoWindow(
             <SightingCard
               sighting={sighting}
@@ -139,10 +164,14 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
     });
 
     markers.current.push(marker);
-    setSightings(prev => new Map(prev.set(sighting.id, sighting)));
+    setSightings((prev) => new Map(prev.set(sighting.id, sighting)));
   };
 
-  const showSightingForm = (position: any, AdvancedMarkerElement: any, PinElement: any) => {
+  const showSightingForm = (
+    position: any,
+    AdvancedMarkerElement: any,
+    PinElement: any
+  ) => {
     const currentTime = new Date();
     const lat = position.lat().toFixed(6);
     const lng = position.lng().toFixed(6);
@@ -152,8 +181,23 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
         lat={lat}
         lng={lng}
         timestamp={currentTime}
-        onSubmit={({ title, description, images, location }) => {
+        onSubmit={async ({ title, description, images, location }) => {
           const sightingId = generateSightingId();
+
+          // upload any images to Firebase storage, using uploadImage().
+          // uploadImage() returns the downloadURL for the uploaded image.
+          // store the imageUrls.
+          let imageURLs: string[] = [];
+
+          if (images && images.length > 0) {
+            // Use Promise.all to wait for all uploads to complete
+            imageURLs = await Promise.all(
+              images.map(async (image) => {
+                return await uploadImage(image, sightingId);
+              })
+            );
+            console.log('Uploaded images:', imageURLs);
+          }
 
           const sighting: Sighting = {
             id: sightingId,
@@ -161,34 +205,31 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
             location,
             time: currentTime,
             description,
-            imageUrls: images ? images.map(file => URL.createObjectURL(file)) : undefined,
-            corroborationCount: 0
+            imageUrls: imageURLs.length > 0 ? imageURLs : [],
+            corroborationCount: 0,
           };
 
-          dbPush(dbRef(realtimeDb, 'sightings'), {
-            id: sightingId,
-            title,
-            description,
-            location,
+          const toPush = {
+            ...sighting,
             lat: position.lat(),
             lng: position.lng(),
             submittedAt: dbServerTimestamp(),
             imageCount: images?.length ?? 0,
-          }).catch((error: unknown) => {
+          };
+
+          dbPush(dbRef(realtimeDb, 'sightings'), toPush).catch((error: unknown) => {
             console.error('Failed to save sighting:', error);
           });
 
-          addICESightingMarker(position, AdvancedMarkerElement, PinElement, sighting);
+          addICESightingMarker(
+            position,
+            AdvancedMarkerElement,
+            PinElement,
+            sighting,
+          );
           infoWindow.current?.close();
-          
-          console.log('Sighting submitted:', {
-            location: `${lat}, ${lng}`,
-            time: currentTime,
-            title,
-            description,
-            address: location,
-            hasImages: !!(images && images.length > 0),
-          });
+
+          console.log('Sighting submitted:', toPush);
         }}
         onCancel={() => infoWindow.current?.close()}
       />,
@@ -196,17 +237,22 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
     );
   };
 
-
   // Setup realtime listener once map is initialized. This will load existing sightings
   // (initial snapshot) and then handle new sightings as they arrive.
   const setupRealtimeListener = () => {
     if (unsubscribeRef.current) return; // already listening
 
-    console.log('Setting up real-time Firebase sightings listener from setupRealtimeListener...');
+    console.log(
+      'Setting up real-time Firebase sightings listener from setupRealtimeListener...'
+    );
     let isInitialLoad = true;
 
     unsubscribeRef.current = listenToSightings((firebaseSightings) => {
-      console.log('Firebase listener callback received', firebaseSightings.length, 'sightings');
+      console.log(
+        'Firebase listener callback received',
+        firebaseSightings.length,
+        'sightings'
+      );
 
       firebaseSightings.forEach((firebaseSighting: any) => {
         const sightingKey = firebaseSighting.firebaseKey || firebaseSighting.id;
@@ -218,8 +264,16 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
 
           // show notification only after initial load
           if (!isInitialLoad) {
-            const location = firebaseSighting.location || `${firebaseSighting.lat?.toFixed(4)}, ${firebaseSighting.lng?.toFixed(4)}`;
-            setNewSightingNotification(`New sighting reported: ${firebaseSighting.title || 'ICE Sighting'} at ${location}`);
+            const location =
+              firebaseSighting.location ||
+              `${firebaseSighting.lat?.toFixed(
+                4
+              )}, ${firebaseSighting.lng?.toFixed(4)}`;
+            setNewSightingNotification(
+              `New sighting reported: ${
+                firebaseSighting.title || 'ICE Sighting'
+              } at ${location}`
+            );
             setTimeout(() => setNewSightingNotification(null), 5000);
           }
         }
@@ -235,8 +289,11 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
     if (!mapRef.current) return;
 
     try {
-      const { Map, InfoWindow } = await window.google.maps.importLibrary("maps");
-      const { AdvancedMarkerElement, PinElement } = await window.google.maps.importLibrary("marker");
+      const { Map, InfoWindow } = await window.google.maps.importLibrary(
+        'maps'
+      );
+      const { AdvancedMarkerElement, PinElement } =
+        await window.google.maps.importLibrary('marker');
 
       // Function to get user location with permission
       const getUserLocation = (): Promise<{ lat: number; lng: number }> => {
@@ -254,13 +311,13 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
               });
             },
             (error) => {
-              console.log("Geolocation error:", error.message);
+              console.log('Geolocation error:', error.message);
               reject(error);
             },
             {
               enableHighAccuracy: true,
               timeout: 10000,
-              maximumAge: 600000 // 10 minutes
+              maximumAge: 600000, // 10 minutes
             }
           );
         });
@@ -276,7 +333,7 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
         initialZoom = 15;
         console.log("Using user's location:", userLocation);
       } catch (error) {
-        console.log("Using default location (Evanston):", error);
+        console.log('Using default location (Evanston):', error);
       }
 
       mapInstance.current = new Map(mapRef.current, {
@@ -288,7 +345,7 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
         fullscreenControl: false, // Disable fullscreen button
         mapTypeControl: false, // Also disable map type control (optional)
         zoomControl: true, // Keep zoom controls
-        rotateControl: false // Disable rotate control (optional)
+        rotateControl: false, // Disable rotate control (optional)
       });
 
       infoWindow.current = new InfoWindow();
@@ -301,7 +358,6 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
 
       // start listening to Firebase sightings once the map is ready
       setupRealtimeListener();
-
     } catch (error) {
       console.error('Error initializing Google Maps:', error);
     }
@@ -340,7 +396,7 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white py-2 px-4 rounded-lg shadow-lg z-10 text-sm">
         Click on the map to add a pin for an ICE sighting.
       </div>
-      
+
       {/* New sighting notification */}
       {newSightingNotification && (
         <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-green-600 text-white py-3 px-6 rounded-lg shadow-lg z-20 text-sm max-w-md text-center animate-pulse">
