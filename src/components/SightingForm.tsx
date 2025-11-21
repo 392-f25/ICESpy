@@ -80,10 +80,13 @@ const SightingForm = ({
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (files) {
+    if (files && files.length > 0) {
       const fileArray = Array.from(files);
       setImageFiles(fileArray);
       setValue('images', fileArray);
+    } else {
+      setImageFiles([]);
+      setValue('images', undefined);
     }
   };
 

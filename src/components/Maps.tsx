@@ -205,7 +205,7 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
             location,
             time: currentTime,
             description,
-            imageUrls: imageURLs.length > 0 ? imageURLs : undefined,
+            imageUrls: imageURLs.length > 0 ? imageURLs : [],
             corroborationCount: 0,
           };
 
