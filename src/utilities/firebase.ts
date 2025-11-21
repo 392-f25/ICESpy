@@ -7,6 +7,7 @@ import {
   signInWithPopup,
   signOut,
 } from 'firebase/auth';
+import { getDatabase, push as pushToDb, ref as dbReference, serverTimestamp } from 'firebase/database';
 import type { User } from 'firebase/auth';
 
 // Configure Firebase via Vite env variables
@@ -17,16 +18,21 @@ const firebaseConfig = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+export const realtimeDb = getDatabase(app);
 
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: 'select_account' });
 
 export const signInWithGoogle = () => signInWithPopup(auth, provider);
 export const signOutUser = () => signOut(auth);
+export const dbRef = dbReference;
+export const dbPush = pushToDb;
+export const dbServerTimestamp = serverTimestamp;
 
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);

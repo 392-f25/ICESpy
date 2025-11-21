@@ -4,6 +4,7 @@ import SightingForm from './SightingForm.tsx';
 import { createPinMarker } from './Pin.tsx';
 import SightingCard from './SightingCard.tsx';
 import type { Sighting } from '../types/Sighting.ts';
+import { dbPush, dbRef, dbServerTimestamp, realtimeDb } from '../utilities/firebase';
 
 // Extend the Window interface to include google
 declare global {
@@ -116,8 +117,10 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
         lng={lng}
         timestamp={currentTime}
         onSubmit={({ title, description, images, location }) => {
+          const sightingId = generateSightingId();
+
           const sighting: Sighting = {
-            id: generateSightingId(),
+            id: sightingId,
             title,
             location,
             time: new Date(),
@@ -125,6 +128,19 @@ const Maps: React.FC<MapsProps> = ({ className = "w-full h-full" }) => {
             imageUrls: images ? images.map(file => URL.createObjectURL(file)) : undefined,
             corroborationCount: 0
           };
+
+          dbPush(dbRef(realtimeDb, 'sightings'), {
+            id: sightingId,
+            title,
+            description,
+            location,
+            lat: position.lat(),
+            lng: position.lng(),
+            submittedAt: dbServerTimestamp(),
+            imageCount: images?.length ?? 0,
+          }).catch((error: unknown) => {
+            console.error('Failed to save sighting:', error);
+          });
 
           addICESightingMarker(position, AdvancedMarkerElement, PinElement, sighting);
           infoWindow.current?.close();
