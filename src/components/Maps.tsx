@@ -149,15 +149,34 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
       PinElement,
       map: mapInstance.current!,
       onClick: () => {
-        if (infoWindow.current) {
+        if (infoWindow.current && mapInstance.current) {
+          // Re-center the map to the clicked marker's position
+          mapInstance.current.panTo(position);
+          
+          // Optionally zoom in a bit if not already zoomed
+          const currentZoom = mapInstance.current.getZoom();
+          if (currentZoom < 15) {
+            mapInstance.current.setZoom(15);
+          }
+
+          // Close any existing info window
           infoWindow.current.close();
 
-          renderInInfoWindow(
+          // Create container for the sighting card
+          const container = document.createElement('div');
+          const root = createRoot(container);
+          
+          root.render(
             <SightingCard
               sighting={sighting}
               onCorroborate={handleCorroboration}
             />
           );
+
+          // Set content and position
+          infoWindow.current.setContent(container);
+          infoWindow.current.setPosition(position);
+          infoWindow.current.open(mapInstance.current, marker);
         }
       },
       sightingData: sighting,
