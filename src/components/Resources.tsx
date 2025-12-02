@@ -2,7 +2,6 @@ import {
   BellRing,
   Camera,
   DoorClosed,
-  FileX2,
   Home,
   NotebookPen,
   PhoneCall,

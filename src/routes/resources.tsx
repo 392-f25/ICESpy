@@ -3,7 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import Resources from '../components/Resources'
 
-export const Route = createFileRoute('/resources')({
+export const Route = createFileRoute('/resources' as any)({
   component: RouteComponent,
 })
 
