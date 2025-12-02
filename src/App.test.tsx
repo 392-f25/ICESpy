@@ -20,6 +20,6 @@ describe('counter tests', () => {
     
   test("Counter should be 0 at the start", () => {
     render(<App />);
-    expect(screen.getByText('ICE Spy')).toBeDefined();
+    expect(screen.getByText('Prairie Dog')).toBeDefined();
   });
 });
