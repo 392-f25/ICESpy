@@ -16,10 +16,10 @@ vi.mock('./utilities/firebase', () => ({
   corroborateSighting: vi.fn(),
 }));
 
-describe('counter tests', () => {
+describe('App component tests', () => {
     
-  test("Counter should be 0 at the start", () => {
+  test("App renders with map instruction text", () => {
     render(<App />);
-    expect(screen.getByText('ICE Spy')).toBeDefined();
+    expect(screen.getByText('Click on the map to add a pin for an ICE sighting.')).toBeDefined();
   });
 });
