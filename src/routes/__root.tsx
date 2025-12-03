@@ -6,7 +6,7 @@ export const Route = createRootRoute({
   component: () => (
     <div className="w-screen h-screen flex flex-col">
       <Header />
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-auto">
         <Outlet />
       </div>
       <TanStackRouterDevtools />
