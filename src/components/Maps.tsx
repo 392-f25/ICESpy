@@ -365,6 +365,7 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
         mapTypeControl: false, // Also disable map type control (optional)
         zoomControl: true, // Keep zoom controls
         rotateControl: false, // Disable rotate control (optional)
+        clickableIcons: false, // Disable clickable POI icons
       });
 
       infoWindow.current = new InfoWindow();
