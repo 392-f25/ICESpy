@@ -1,0 +1,598 @@
+commit 1e526e3809b0ca5454874fe6181a5c56586ea375
+Author: Eddie Shangguan <eddieshangguan99@gmail.com>
+Date:   Tue Dec 2 16:40:59 2025 -0600
+
+    app test ci
+
+M	src/App.test.tsx
+
+commit 725bc0806ae93f6c22e1b53d0874cc5e5571b4de
+Author: Eddie Shangguan <eddieshangguan99@gmail.com>
+Date:   Tue Dec 2 16:38:26 2025 -0600
+
+    ci workflows
+
+M	src/components/Resources.tsx
+M	src/routes/resources.tsx
+
+commit 4cbf9df38f74922da44cc03e5eca533a0252cccc
+Author: rohvvn <r.sekhar1033@gmail.com>
+Date:   Tue Dec 2 16:37:20 2025 -0600
+
+    meetings
+
+A	minutes/swarm-12-02.md
+
+commit 7da12b943be81c778eb0528f568e95bfd1ccee8e
+Author: shiyuexu <shiyuexu@dhcp-10-105-242-106.wireless.northwestern.private>
+Date:   Tue Dec 2 16:29:07 2025 -0600
+
+     recenter the pin
+
+M	src/components/Maps.tsx
+
+commit 1b1dcf87dd2dc8642da3ace0e222665369a58e12
+Author: Eddie Shangguan <eddieshangguan99@gmail.com>
+Date:   Tue Dec 2 16:22:32 2025 -0600
+
+    changed the title and created top bar component
+
+M	index.html
+M	src/App.test.tsx
+M	src/App.tsx
+A	src/components/Header.tsx
+M	src/routes/__root.tsx
+M	src/routes/index.tsx
+
+commit d8aedf7b364f6d4a4d76975c0f49b2479c3bc9c2
+Author: ianfs4 <ianfslater4@gmail.com>
+Date:   Tue Dec 2 16:06:12 2025 -0600
+
+    fixed route generation
+
+M	package-lock.json
+M	package.json
+M	src/routeTree.gen.ts
+
+commit a2db8451214364e837da683a9d31e3f1cf8ae3df
+Author: rohvvn <r.sekhar1033@gmail.com>
+Date:   Tue Dec 2 15:58:18 2025 -0600
+
+    resource page
+
+M	package-lock.json
+A	src/components/Resources.tsx
+A	src/routes/resources.tsx
+
+commit 0ec180d46d53d7993c5703ebbaef04012fb9362b
+Author: ianfs4 <ianfslater4@gmail.com>
+Date:   Tue Dec 2 15:45:19 2025 -0600
+
+    added tanstack routing
+
+M	package-lock.json
+M	package.json
+M	src/main.tsx
+A	src/routeTree.gen.ts
+A	src/routes/__root.tsx
+A	src/routes/index.tsx
+
+commit 22a7c2f07e7ec4c8f3d5ea6ac6d92c2cc7afddc0
+Author: Eddie Shangguan <eddieshangguan99@gmail.com>
+Date:   Thu Nov 20 22:24:57 2025 -0600
+
+    Fix test by mocking Firebase
+
+M	src/App.test.tsx
+
+commit 2f500a1e45391266a41e8360d836e161a1dc559b
+Author: Eddie Shangguan <eddieshangguan99@gmail.com>
+Date:   Thu Nov 20 22:16:43 2025 -0600
+
+    fix workflow
+
+M	package-lock.json
+M	package.json
+M	src/utilities/firebase.ts
+
+commit 963322e4ef661d8d33748096be2ca70b12d5dae6
+Author: brndn-do <dobrandon05@gmail.com>
+Date:   Thu Nov 20 21:54:53 2025 -0600
+
+    fix: Fix not submitting when no images added
+
+M	src/components/Maps.tsx
+M	src/components/SightingForm.tsx
+
+commit 9721f71bb632f3f780ad29d03b38add99657fa30
+Author: brndn-do <dobrandon05@gmail.com>
+Date:   Thu Nov 20 21:18:24 2025 -0600
+
+    feat: Upload and display images for each sighting
+
+M	.firebaserc
+M	firebase.json
+M	package-lock.json
+M	package.json
+M	src/components/Maps.tsx
+M	src/components/SightingForm.tsx
+M	src/utilities/firebase.ts
+
+commit 00cab7d801f774dd03a9b62312d973bb39f8403b
+Author: Eddie Shangguan <eddieshangguan99@gmail.com>
+Date:   Thu Nov 20 19:57:36 2025 -0600
+
+    fixed time errors
+
+M	package-lock.json
+M	src/components/Maps.tsx
+
+commit 5e27528818ac6dc5c94d4c1021c2c18c2bb94199
+Author: shiyuexu <shiyuexu@shiyuexudembp.ads.northwestern.edu>
+Date:   Thu Nov 20 19:41:22 2025 -0600
+
+     updating pin markers
+
+M	src/components/Maps.tsx
+M	src/utilities/firebase.ts
+
+commit 5f63099d7845de069aaa48789b12f92c4cfece14
+Author: Eddie Shangguan <eddieshangguan99@gmail.com>
+Date:   Thu Nov 20 19:12:55 2025 -0600
+
+    update database rules
+
+M	database.rules.json
+A	storage.rules
+
+commit a06916cc6908548471180698ad1257ced8e511c2
+Author: Eiko Reisz <eiko.reisz@gmail.com>
+Date:   Thu Nov 20 19:11:10 2025 -0600
+
+    meeting minutes
+
+A	minutes/swarm-11-20.md
+
+commit d26e4a24f5a0787d0cc6ac5be8f3eaff582ea45d
+Author: ianfs4 <ianfslater4@gmail.com>
+Date:   Thu Nov 20 18:49:11 2025 -0600
+
+    fixed image display formatting
+
+M	package-lock.json
+M	package.json
+M	src/components/SightingCard.tsx
+
+commit af59952ff09f8c5a6a5700463a9b896e5421adc7
+Author: shiyuexu <shiyuexu@shiyuexudembp.ads.northwestern.edu>
+Date:   Thu Nov 20 18:37:29 2025 -0600
+
+    add user to the database
+
+M	database.rules.json
+M	src/App.tsx
+M	src/components/AuthButton.tsx
+A	src/components/UserDebugInfo.tsx
+M	src/types/User.ts
+M	src/utilities/firebase.ts
+
+commit 486252115e27bf9b18c463d83f3d91e125fee7bf
+Author: rohvvn <r.sekhar1033@gmail.com>
+Date:   Thu Nov 20 18:21:12 2025 -0600
+
+    write sighting to db
+
+M	database.rules.json
+M	src/components/Maps.tsx
+M	src/utilities/firebase.ts
+
+commit da462f7effe6c294e13f37a893a14d65ddfaa401
+Author: ianfs4 <ianfslater4@gmail.com>
+Date:   Thu Nov 20 18:18:34 2025 -0600
+
+    added zod verification for time
+
+M	src/components/Maps.tsx
+M	src/components/SightingForm.tsx
+
+commit a301a3e4063976fafca782aab66af06fecaf1a35
+Author: Eiko Reisz <eiko.reisz@gmail.com>
+Date:   Thu Nov 20 18:06:10 2025 -0600
+
+    Add Zod verification
+
+M	package-lock.json
+M	package.json
+M	src/components/SightingForm.tsx
+
+commit 55b9673fd3025d66d1d29a399d31d723f48d593b
+Author: rohvvn <r.sekhar1033@gmail.com>
+Date:   Thu Nov 20 17:49:55 2025 -0600
+
+    added google auth/sign in
+
+M	package.json
+M	src/App.tsx
+A	src/components/AuthButton.tsx
+A	src/utilities/firebase.ts
+
+commit 27d15616236c81de5c78dd549d7091f118afe773
+Author: ianfs4 <ianfslater4@gmail.com>
+Date:   Thu Nov 20 17:48:00 2025 -0600
+
+    added edit time and read only location
+
+M	src/components/Maps.tsx
+M	src/components/SightingForm.tsx
+
+commit fe24dc654d10700208bce2c8ae8f8fcba70b9c09
+Author: Eiko Reisz <eiko.reisz@gmail.com>
+Date:   Thu Nov 20 17:36:50 2025 -0600
+
+    Add trivial unit test
+
+A	src/App.test.tsx
+
+commit cb8b710ec07160ddb63248b8c9760c5e402eefb7
+Author: Eiko Reisz <eiko.reisz@gmail.com>
+Date:   Thu Nov 20 17:34:40 2025 -0600
+
+    remove useless tests
+
+D	src/App.test.tsx
+
+commit f49dd95fa7f6fbb84572209b9262ded0afed7aee
+Author: Eiko Reisz <eiko.reisz@gmail.com>
+Date:   Thu Nov 20 17:31:55 2025 -0600
+
+    fix pr artifact
+
+M	src/components/SightingForm.tsx
+
+commit 1862ad4af0d817e9aec177d25a3ccd39eb85d51a
+Author: Eiko Reisz <eiko.reisz@gmail.com>
+Date:   Thu Nov 20 17:13:06 2025 -0600
+
+    Form Changes
+
+A	src/components/Address.tsx
+M	src/components/Maps.tsx
+M	src/components/SightingCard.tsx
+M	src/components/SightingForm.tsx
+M	src/index.css
+D	src/maps/maps.html
+D	src/maps/maps.jsx
+M	src/types/Sighting.ts
+
+commit def4f19b2c04ba0215182c74fe06588d009db357
+Author: ianfs4 <ianfslater4@gmail.com>
+Date:   Tue Nov 18 18:48:00 2025 -0600
+
+    docs: edited minutes
+
+M	minutes/swarm-11-18.md
+
+commit 2f8196d5c136a763f3bc2c332555abd6fd2a8995
+Author: ianfs4 <ianfslater4@gmail.com>
+Date:   Tue Nov 18 18:47:18 2025 -0600
+
+    docs: added minutes
+
+A	minutes/swarm-11-18.md
+
+commit 6278b25626986a0acf273207f4e36c6b156df9d4
+Author: ianfs4 <ianfslater4@gmail.com>
+Date:   Tue Nov 18 18:07:57 2025 -0600
+
+    chore: fixed import errors and whitespacing
+
+M	src/components/Maps.tsx
+M	src/components/Pin.tsx
+M	src/components/SightingCard.tsx
+M	src/components/SightingForm.tsx
+M	src/types/Sighting.ts
+M	src/types/User.ts
+
+commit 64e748a1cf8aa4b0225fcc71cd8665be0c977451
+Author: ianfs4 <ianfslater4@gmail.com>
+Date:   Tue Nov 18 18:05:43 2025 -0600
+
+    initialized firebase
+
+A	database.rules.json
+A	firebase.json
+
+commit 8d29a7dd01cd4692c2f890d79e64e242db2e4ad9
+Author: shiyuexu <shiyuexu@shiyuexudembp.ads.northwestern.edu>
+Date:   Tue Nov 18 17:59:39 2025 -0600
+
+    new types and updating the corresponding files
+
+M	src/components/Maps.tsx
+M	src/components/Pin.tsx
+M	src/components/SightingCard.tsx
+M	src/components/SightingForm.tsx
+A	src/types/Sighting.ts
+A	src/types/User.ts
+
+commit 452da6984f446b9fd0ec2bb73457fb586813b174
+Author: Eddie Shangguan <eddieshangguan99@gmail.com>
+Date:   Tue Nov 18 17:30:59 2025 -0600
+
+    separated compoments for pin and sightingcard/form
+
+M	src/components/Maps.tsx
+A	src/components/Pin.tsx
+A	src/components/SightingCard.tsx
+
+commit a8aa7576e0ef790935b9fe84164e9bea0976417c
+Author: rohvvn <r.sekhar1033@gmail.com>
+Date:   Tue Nov 18 17:18:11 2025 -0600
+
+    refactored and added tailwind
+
+M	package-lock.json
+M	src/components/Maps.tsx
+A	src/components/SightingForm.tsx
+A	temp_file_with_lines.txt
+
+commit b11279fb0bd7b8d59ed99346f5241051cd0d8101
+Author: Eiko Reisz <eiko.reisz@gmail.com>
+Date:   Tue Nov 18 16:58:58 2025 -0600
+
+    UI touch ups
+
+M	index.html
+A	public/magnifying.png
+M	src/App.tsx
+
+commit 9a1fac5c14deb5897748fcc75217bc4f5443e415
+Author: Eiko Reisz <eiko.reisz@gmail.com>
+Date:   Mon Nov 17 15:48:22 2025 -0600
+
+    more yaml updates
+
+A	.firebaserc
+M	.github/workflows/main.yml
+M	.gitignore
+M	package-lock.json
+M	package.json
+
+commit 64cedfadc22ed27feaef8535061678825cc87411
+Author: Eiko Reisz <eiko.reisz@gmail.com>
+Date:   Mon Nov 17 15:40:15 2025 -0600
+
+    update yaml action
+
+M	.github/workflows/main.yml
+M	package-lock.json
+M	package.json
+
+commit 4ecf7af4cebb66c60a50b495035b4ce7c7896880
+Author: Eiko Reisz <eiko.reisz@gmail.com>
+Date:   Mon Nov 17 15:28:07 2025 -0600
+
+    action YAML
+
+A	.github/workflows/main.yml
+A	firebase.json
+
+commit 892215f035915bdd5f35140ea6b769d479085e90
+Author: Eiko Reisz <eiko.reisz@gmail.com>
+Date:   Sun Nov 16 17:49:03 2025 -0600
+
+    Maps component
+
+M	index.html
+M	src/App.tsx
+A	src/components/Maps.tsx
+A	src/maps/maps.html
+A	src/maps/maps.jsx
+
+commit 589fe70abbc623393b1d6d28e658f351f30f4774
+Author: Eiko Reisz <eiko.reisz@gmail.com>
+Date:   Sun Nov 16 12:22:49 2025 -0600
+
+    Finish schema and minutes notes
+
+M	docs/features.md
+A	docs/minutes/swarm-11-16.md
+
+commit 44046c5058112b676a49bb9ab994c23dfcbfe786
+Author: Eddie Shangguan <eddieshangguan99@gmail.com>
+Date:   Sun Nov 16 12:15:51 2025 -0600
+
+    schema update
+
+M	docs/schema.md
+
+commit 8e8887f342d4f1745efd0b43ab8bac0cc81f5f8e
+Author: Eddie Shangguan <eddieshangguan99@gmail.com>
+Date:   Sun Nov 16 12:15:00 2025 -0600
+
+    schema and workflow
+
+A	docs/schema.md
+M	docs/workflow.md
+
+commit d49889e1c8901a736f2768e6eda513cb9ca689c5
+Author: Eiko Reisz <eiko.reisz@gmail.com>
+Date:   Sun Nov 16 11:56:59 2025 -0600
+
+    test
+
+A	docs/minutes/swarm-11-16.md
+
+commit 1b35de8935184c00c3d5d1dfa0b555eb9d21dc1d
+Author: shiyuexu <shiyuexu@shiyuexudembp.ads.northwestern.edu>
+Date:   Sun Nov 16 11:54:56 2025 -0600
+
+    user story
+
+A	docs/workflow.md
+
+commit b304ede4ac99839c4eb09cea28290a1a0335b723
+Author: brndn-do <dobrandon05@gmail.com>
+Date:   Sun Nov 16 11:41:10 2025 -0600
+
+    docs: Update features
+
+M	docs/features.md
+
+commit 781a3b7c37d2bbf7bffeed40cae521037e41ee8a
+Author: Eiko Reisz <eiko.reisz@gmail.com>
+Date:   Sun Nov 16 11:35:01 2025 -0600
+
+    initial planning
+
+A	docs/features.md
+
+commit e1b47cd89ea66be255206cb3ba065c4af1c75d39
+Author: criesbeck <chris.riesbeck@gmail.com>
+Date:   Wed Oct 15 14:36:23 2025 -0500
+
+    update libraries
+
+M	package-lock.json
+M	package.json
+
+commit 7133359806f97a55c87488821f6a44b7f13fa113
+Author: criesbeck <chris.riesbeck@gmail.com>
+Date:   Mon Sep 22 16:23:09 2025 -0500
+
+    replace other npm start reference
+
+M	README.md
+
+commit 47b5535a8e791e2857695b58241e8884f100b3a2
+Author: criesbeck <chris.riesbeck@gmail.com>
+Date:   Mon Sep 22 16:21:23 2025 -0500
+
+    replace npm start in readme
+
+M	README.md
+
+commit 6fcd66663f71564b1598ba44ae59d5176fe52dc0
+Author: criesbeck <chris.riesbeck@gmail.com>
+Date:   Fri Sep 12 15:37:10 2025 -0500
+
+    package update
+
+M	package-lock.json
+M	package.json
+M	src/App.tsx
+
+commit c750ef553ef4122c590e21d1589e8b307055a854
+Author: criesbeck <chris.riesbeck@gmail.com>
+Date:   Thu Aug 21 11:00:03 2025 -0500
+
+    add jsdom
+    add missing test type
+
+M	package-lock.json
+M	package.json
+M	vite.config.ts
+
+commit 07a5ffe399dcf4b8d54f21476d0c9aa7ca066109
+Author: criesbeck <chris.riesbeck@gmail.com>
+Date:   Thu Aug 21 10:39:25 2025 -0500
+
+    add tailwind styling to demo app
+
+M	src/App.tsx
+M	src/index.css
+
+commit 576c7b15257a158df6326d80da3a8fad6c05bc05
+Author: criesbeck <chris.riesbeck@gmail.com>
+Date:   Thu Aug 21 08:58:32 2025 -0500
+
+    add  App.test.tsx
+
+M	README.md
+A	src/App.test.tsx
+
+commit 4f31248a9963d3e7ec4592bcf88535043ff23b38
+Author: criesbeck <chris.riesbeck@gmail.com>
+Date:   Wed Aug 20 18:05:49 2025 -0500
+
+    added tailwind
+
+M	README.md
+M	package-lock.json
+M	package.json
+M	src/App.css
+M	src/App.tsx
+M	src/index.css
+M	vite.config.ts
+
+commit 37d3a08a98eb062264fd6664879f90f77f4bc54c
+Author: criesbeck <chris.riesbeck@gmail.com>
+Date:   Wed Aug 20 10:57:28 2025 -0500
+
+    tweaked npx instructions
+
+M	README.md
+
+commit 0a6f407d4f1f614a42dacce1ac0466d042e4d3e0
+Author: criesbeck <chris.riesbeck@gmail.com>
+Date:   Tue Aug 19 09:50:22 2025 -0500
+
+    readme update
+
+M	README.md
+
+commit 426f605a4e121149e38d46e871c593dbc76ef247
+Author: criesbeck <chris.riesbeck@gmail.com>
+Date:   Tue Aug 19 09:13:34 2025 -0500
+
+    updated libraries
+    set up react compiler
+
+M	eslint.config.js
+M	package-lock.json
+M	package.json
+M	vite.config.ts
+
+commit afc6780072413907d2b4a5746546bc64a6165ffb
+Author: criesbeck <chris.riesbeck@gmail.com>
+Date:   Wed Jun 25 12:56:30 2025 -0500
+
+    update to vite 7
+
+M	package-lock.json
+M	package.json
+
+commit eacb08d0bd7a284fb2371fa8b7b106be009f1cbc
+Author: criesbeck <chris.riesbeck@gmail.com>
+Date:   Wed Jun 18 16:29:03 2025 -0500
+
+    added README
+    expanded gitignore
+
+M	.gitignore
+M	README.md
+A	public/robots.txt
+
+commit c12162f26cc66abf46dbdb9d0ed9556bdfd948a4
+Author: criesbeck <chris.riesbeck@gmail.com>
+Date:   Wed Jun 18 16:07:02 2025 -0500
+
+    initial commit
+
+A	.gitignore
+A	README.md
+A	eslint.config.js
+A	index.html
+A	package-lock.json
+A	package.json
+A	public/vite.svg
+A	src/App.css
+A	src/App.tsx
+A	src/assets/react.svg
+A	src/index.css
+A	src/main.tsx
+A	src/vite-env.d.ts
+A	tsconfig.app.json
+A	tsconfig.json
+A	tsconfig.node.json
+A	vite.config.ts
