@@ -1,10 +1,12 @@
 export type Sighting ={
     id: string;
+    firebaseKey?: string;
     title: string;
     location: string;
     time: Date;
     description?: string;
     imageUrls?: string[];
-    corroborationCount: number;
+    upvotes: number;
+    corroborationCount?: number;
 }
 

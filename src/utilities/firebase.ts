@@ -8,7 +8,7 @@ import {
   signOut,
 } from 'firebase/auth';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { getDatabase, push as pushToDb, ref as dbReference, serverTimestamp, set, get, onValue, off } from 'firebase/database';
+import { getDatabase, push as pushToDb, ref as dbReference, serverTimestamp, set, get, onValue, off, runTransaction } from 'firebase/database';
 import type { User } from 'firebase/auth';
 import type { User as AppUser } from '../types/User';
 
@@ -119,6 +119,19 @@ export const listenToSightings = (callback: (sightings: any[]) => void) => {
 
   // Return unsubscribe function
   return () => off(sightingsRef, 'value', unsubscribe);
+};
+
+export const incrementSightingUpvotes = async (firebaseKey: string): Promise<number> => {
+  const upvotesRef = dbRef(realtimeDb, `sightings/${firebaseKey}/upvotes`);
+
+  const result = await runTransaction(upvotesRef, (current) => {
+    if (typeof current === 'number') {
+      return current + 1;
+    }
+    return 1;
+  });
+
+  return result.snapshot?.val() ?? 0;
 };
 
 export const useAuthState = () => {

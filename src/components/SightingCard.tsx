@@ -1,27 +1,49 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Sighting } from '../types/Sighting.ts';
 
 interface SightingCardProps {
   sighting: Sighting;
-  onCorroborate?: (sightingId: string) => void;
+  hasUpvoted?: boolean;
+  isUpvotePending?: boolean;
+  onUpvote?: (sighting: Sighting) => void;
   onEdit?: (sighting: Sighting) => void;
 }
 
 const SightingCard: React.FC<SightingCardProps> = ({ 
   sighting, 
-  onCorroborate,
+  hasUpvoted = false,
+  isUpvotePending = false,
+  onUpvote,
   onEdit 
 }) => {
-  const [hasCorroborated, setHasCorroborated] = useState(false);
+  const [hasConfirmed, setHasConfirmed] = useState(hasUpvoted);
+  const [displayUpvotes, setDisplayUpvotes] = useState(
+    typeof sighting.upvotes === 'number'
+      ? sighting.upvotes
+      : sighting.corroborationCount || 0
+  );
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-  const handleCorroborate = () => {
-    if (!hasCorroborated && onCorroborate) {
-      onCorroborate(sighting.id);
-      setHasCorroborated(true);
+  const handleUpvote = () => {
+    if (!hasConfirmed && !isUpvotePending && onUpvote) {
+      setHasConfirmed(true);
+      setDisplayUpvotes((prev) => prev + 1);
+      onUpvote(sighting);
     }
   };
+
+  useEffect(() => {
+    setHasConfirmed(hasUpvoted);
+  }, [hasUpvoted]);
+
+  useEffect(() => {
+    setDisplayUpvotes(
+      typeof sighting.upvotes === 'number'
+        ? sighting.upvotes
+        : sighting.corroborationCount || 0
+    );
+  }, [sighting.corroborationCount, sighting.upvotes]);
 
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleString();
@@ -106,19 +128,23 @@ const SightingCard: React.FC<SightingCardProps> = ({
 
         <div className="flex items-center justify-between border-t border-gray-200 pt-2">
           <div className="text-[12px] text-gray-600">
-            {sighting.corroborationCount} {sighting.corroborationCount === 1 ? 'person' : 'people'} saw this too
+            {displayUpvotes} {displayUpvotes === 1 ? 'person' : 'people'} saw this too
           </div>
-          {onCorroborate && (
+          {onUpvote && (
             <button
-              onClick={handleCorroborate}
-              disabled={hasCorroborated}
+              onClick={handleUpvote}
+              disabled={hasConfirmed || isUpvotePending}
               className={`rounded px-2 py-1 text-[12px] font-semibold transition ${
-                hasCorroborated
+                hasConfirmed || isUpvotePending
                   ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                   : 'bg-green-600 text-white hover:bg-green-700'
               }`}
             >
-              {hasCorroborated ? 'Confirmed' : 'I saw this too!'}
+              {hasConfirmed
+                ? 'Confirmed'
+                : isUpvotePending
+                  ? 'Submitting...'
+                  : 'I saw this too!'}
             </button>
           )}
         </div>

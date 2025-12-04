@@ -8,8 +8,10 @@ import {
   dbPush,
   dbRef,
   dbServerTimestamp,
+  incrementSightingUpvotes,
   realtimeDb,
   listenToSightings,
+  useAuthState,
   uploadImage,
 } from '../utilities/firebase';
 
@@ -31,12 +33,21 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
   const markers = useRef<any[]>([]);
   const infoWindowRoot = useRef<Root | null>(null);
   const [sightings, setSightings] = useState<Map<string, Sighting>>(new Map());
+  const sightingsRef = useRef<Map<string, Sighting>>(new Map());
+  const [upvotedSightings, setUpvotedSightings] = useState<Set<string>>(new Set());
+  const upvotedSightingsRef = useRef<Set<string>>(new Set());
+  const upvoteStorageKeyRef = useRef<string>('upvotedSightings:guest');
+  const [pendingUpvoteId, setPendingUpvoteId] = useState<string | null>(null);
   // track loaded firebase keys in a ref so updates don't trigger rerenders
   const loadedFirebaseSightingsRef = useRef<Set<string>>(new Set());
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const [newSightingNotification, setNewSightingNotification] = useState<
     string | null
   >(null);
+  const { user } = useAuthState();
+
+  const getSightingKey = (sighting: Pick<Sighting, 'id' | 'firebaseKey'>) =>
+    sighting.firebaseKey || sighting.id;
 
   // Helper function to create and setup React components in InfoWindow
   const renderInInfoWindow = (
@@ -76,20 +87,118 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
   const generateSightingId = () =>
     `sighting-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-  // Helper function to update sighting corroboration
-  const handleCorroboration = (sightingId: string) => {
-    setSightings((prev) => {
-      const updated = new Map(prev);
-      const existingSighting = updated.get(sightingId);
-      if (existingSighting) {
-        updated.set(sightingId, {
-          ...existingSighting,
-          corroborationCount: existingSighting.corroborationCount + 1,
-        });
+  useEffect(() => {
+    sightingsRef.current = sightings;
+  }, [sightings]);
+
+  useEffect(() => {
+    upvotedSightingsRef.current = upvotedSightings;
+  }, [upvotedSightings]);
+
+  useEffect(() => {
+    const storageKey = user
+      ? `upvotedSightings:${user.uid}`
+      : 'upvotedSightings:guest';
+
+    upvoteStorageKeyRef.current = storageKey;
+
+    try {
+      const stored = typeof window !== 'undefined'
+        ? window.localStorage.getItem(storageKey)
+        : null;
+
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          const parsedSet = new Set<string>(parsed);
+          setUpvotedSightings(parsedSet);
+          upvotedSightingsRef.current = parsedSet;
+          return;
+        }
       }
-      console.log(`Total sightings: ${updated.size}`);
-      return updated;
-    });
+
+      setUpvotedSightings(new Set());
+      upvotedSightingsRef.current = new Set();
+    } catch (error) {
+      console.error('Failed to load upvoted sightings from storage:', error);
+      setUpvotedSightings(new Set());
+      upvotedSightingsRef.current = new Set();
+    }
+  }, [user]);
+
+  const persistUpvotedSightings = (nextSet: Set<string>) => {
+    upvotedSightingsRef.current = nextSet;
+    setUpvotedSightings(nextSet);
+
+    try {
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(
+          upvoteStorageKeyRef.current,
+          JSON.stringify(Array.from(nextSet))
+        );
+      }
+    } catch (error) {
+      console.error('Failed to persist upvoted sightings:', error);
+    }
+  };
+
+  const handleUpvote = async (sighting: Sighting) => {
+    const sightingKey = getSightingKey(sighting);
+    if (!sightingKey) return;
+
+    if (upvotedSightingsRef.current.has(sightingKey)) {
+      return;
+    }
+
+    try {
+      setPendingUpvoteId(sightingKey);
+      const newCount = await incrementSightingUpvotes(sightingKey);
+
+      const updatedUpvotes = new Set(upvotedSightingsRef.current);
+      updatedUpvotes.add(sightingKey);
+      persistUpvotedSightings(updatedUpvotes);
+
+      setSightings((prev) => {
+        const updated = new Map(prev);
+        const existing = updated.get(sightingKey) || sighting;
+        updated.set(sightingKey, {
+          ...existing,
+          upvotes:
+            typeof newCount === 'number'
+              ? newCount
+              : (existing.upvotes || 0) + 1,
+        });
+        sightingsRef.current = updated;
+        return updated;
+      });
+    } catch (error) {
+      console.error('Failed to upvote sighting:', error);
+    } finally {
+      setPendingUpvoteId(null);
+    }
+  };
+
+  const mapFirebaseSightingToSighting = (firebaseSighting: any): Sighting => {
+    const firebaseKey = firebaseSighting.firebaseKey || firebaseSighting.id;
+
+    return {
+      id: firebaseSighting.id || firebaseKey || generateSightingId(),
+      firebaseKey,
+      title: firebaseSighting.title || 'ICE Sighting',
+      location:
+        firebaseSighting.location ||
+        `${firebaseSighting.lat}, ${firebaseSighting.lng}`,
+      time: firebaseSighting.submittedAt
+        ? new Date(firebaseSighting.submittedAt)
+        : new Date(),
+      description: firebaseSighting.description,
+      imageUrls: firebaseSighting.imageUrls || undefined,
+      upvotes:
+        typeof firebaseSighting.upvotes === 'number'
+          ? firebaseSighting.upvotes
+          : firebaseSighting.corroborationCount || 0,
+      corroborationCount: firebaseSighting.corroborationCount,
+    };
   };
 
   // Function to create marker from Firebase sighting data
@@ -109,20 +218,8 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
         firebaseSighting.lng
       );
 
-      // Convert Firebase data to our Sighting format
-      const sighting: Sighting = {
-        id: firebaseSighting.id || firebaseSighting.firebaseKey,
-        title: firebaseSighting.title || 'ICE Sighting',
-        location:
-          firebaseSighting.location ||
-          `${firebaseSighting.lat}, ${firebaseSighting.lng}`,
-        time: firebaseSighting.submittedAt
-          ? new Date(firebaseSighting.submittedAt)
-          : new Date(),
-        description: firebaseSighting.description,
-        imageUrls: firebaseSighting.imageUrls || undefined,
-        corroborationCount: firebaseSighting.corroborationCount || 0,
-      };
+      const sighting = mapFirebaseSightingToSighting(firebaseSighting);
+      const sightingKey = getSightingKey(sighting);
 
       await addICESightingMarker(
         position,
@@ -130,6 +227,10 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
         PinElement,
         sighting
       );
+
+      if (sightingKey) {
+        loadedFirebaseSightingsRef.current.add(sightingKey);
+      }
 
       console.log('Created marker for Firebase sighting:', sighting.id);
     } catch (error) {
@@ -143,6 +244,8 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
     PinElement: any,
     sighting: Sighting,
   ) => {
+    const sightingKey = getSightingKey(sighting);
+
     const marker = createPinMarker({
       position,
       AdvancedMarkerElement,
@@ -165,11 +268,20 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
           // Create container for the sighting card
           const container = document.createElement('div');
           const root = createRoot(container);
+          const latestSighting =
+            (sightingKey && sightingsRef.current.get(sightingKey)) || sighting;
+          const hasUpvoted =
+            sightingKey && upvotedSightingsRef.current.has(sightingKey);
+          const isPending = sightingKey
+            ? pendingUpvoteId === sightingKey
+            : false;
           
           root.render(
             <SightingCard
-              sighting={sighting}
-              onCorroborate={handleCorroboration}
+              sighting={latestSighting}
+              hasUpvoted={!!hasUpvoted}
+              isUpvotePending={isPending}
+              onUpvote={handleUpvote}
             />
           );
 
@@ -183,7 +295,16 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
     });
 
     markers.current.push(marker);
-    setSightings((prev) => new Map(prev.set(sighting.id, sighting)));
+
+    if (sightingKey) {
+      loadedFirebaseSightingsRef.current.add(sightingKey);
+      setSightings((prev) => {
+        const updated = new Map(prev);
+        updated.set(sightingKey, sighting);
+        sightingsRef.current = updated;
+        return updated;
+      });
+    }
   };
 
   const showSightingForm = (
@@ -225,7 +346,7 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
             time: currentTime,
             description,
             imageUrls: imageURLs.length > 0 ? imageURLs : [],
-            corroborationCount: 0,
+            upvotes: 0,
           };
 
           const toPush = {
@@ -234,19 +355,32 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
             lng: position.lng(),
             submittedAt: dbServerTimestamp(),
             imageCount: images?.length ?? 0,
+            upvotes: 0,
           };
 
-          dbPush(dbRef(realtimeDb, 'sightings'), toPush).catch((error: unknown) => {
-            console.error('Failed to save sighting:', error);
-          });
+          try {
+            const newSightingRef = await dbPush(
+              dbRef(realtimeDb, 'sightings'),
+              toPush
+            );
 
-          addICESightingMarker(
-            position,
-            AdvancedMarkerElement,
-            PinElement,
-            sighting,
-          );
-          infoWindow.current?.close();
+            const firebaseKey = newSightingRef.key || sightingId;
+            const sightingWithKey: Sighting = {
+              ...sighting,
+              firebaseKey,
+              id: firebaseKey || sightingId,
+            };
+
+            addICESightingMarker(
+              position,
+              AdvancedMarkerElement,
+              PinElement,
+              sightingWithKey,
+            );
+            infoWindow.current?.close();
+          } catch (error: unknown) {
+            console.error('Failed to save sighting:', error);
+          }
 
           console.log('Sighting submitted:', toPush);
         }}
@@ -273,8 +407,17 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
         'sightings'
       );
 
+      const nextSightings = new Map<string, Sighting>();
+
       firebaseSightings.forEach((firebaseSighting: any) => {
-        const sightingKey = firebaseSighting.firebaseKey || firebaseSighting.id;
+        const mappedSighting = mapFirebaseSightingToSighting(firebaseSighting);
+        const sightingKey = getSightingKey(mappedSighting);
+
+        if (!sightingKey) {
+          return;
+        }
+
+        nextSightings.set(sightingKey, mappedSighting);
 
         if (!loadedFirebaseSightingsRef.current.has(sightingKey)) {
           // create marker for this sighting
@@ -297,6 +440,9 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
           }
         }
       });
+
+      sightingsRef.current = nextSightings;
+      setSightings(nextSightings);
 
       if (isInitialLoad) {
         isInitialLoad = false;
