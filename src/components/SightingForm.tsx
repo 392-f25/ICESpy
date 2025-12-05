@@ -21,6 +21,15 @@ interface SightingFormProps {
   existingSighting?: Sighting;
 }
 
+const SIGHTING_CATEGORIES: SightingCategory[] = [
+  'ICE activity',
+  'Police activity',
+  'Accident',
+  'Crime',
+  'Lost items',
+  'Other',
+];
+
 // Updated Zod schema to match your form structure
 const sightingSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -31,7 +40,7 @@ const sightingSchema = z.object({
   }, "Date must match format: 11/20/2025, 6:17 PM"),
   description: z.string().max(500, 'Description must be less than 500 characters').optional(),
   images: z.array(z.instanceof(File)).optional(),
-  category: z.enum(['ICE activity', 'police activity', 'accident', 'crime', 'lost items'])
+  category: z.enum(SIGHTING_CATEGORIES)
 });
 
 type SightingFormData = z.infer<typeof sightingSchema>;
@@ -167,13 +176,18 @@ const SightingForm = ({
         </label>
         <select
           {...register('category')}
-          className="w-full rounded border border-gray-200 bg-white px-1 py-1 text-[11px]"
+          className="w-full cursor-pointer rounded border border-gray-200 bg-white px-1 py-1 text-[11px]"
         >
-          <option value="ICE activity">ICE activity</option>
-          <option value="police activity">police activity</option>
-          <option value="accident">accident</option>
-          <option value="crime">crime</option>
-          <option value="lost items">lost items</option>
+          {/* Add a default/placeholder option if needed */}
+          <option value="">Select a category</option> 
+          
+          {/* Map over the SIGHTING_CATEGORIES array */}
+          {SIGHTING_CATEGORIES.map((category) => (
+            <option key={category} value={category}>
+              {category}
+            </option>
+          ))}
+          
         </select>
         {errors.category && (
           <p className="mt-1 text-[10px] text-red-600">{errors.category.message}</p>
@@ -213,7 +227,7 @@ const SightingForm = ({
           accept="image/*"
           multiple
           onChange={handleFileChange}
-          className="w-full rounded border border-gray-200 px-1 py-1 text-[10px] file:mr-2 file:rounded file:border-0 file:bg-violet-600 file:px-2 file:py-1 file:text-[10px] file:font-semibold file:text-white"
+          className="w-full rounded border border-gray-200 px-1 py-1 text-[10px] file:cursor-pointer file:mr-2 file:rounded file:border-0 file:bg-violet-600 file:px-2 file:py-1 file:text-[10px] file:font-semibold file:text-white"
         />
         {imageFiles.length > 0 && (
           <div className="mt-1 text-[10px] text-gray-600">
@@ -227,7 +241,7 @@ const SightingForm = ({
         <button
           type="submit"
           disabled={isSubmitting}
-          className={`flex-1 rounded px-3 py-1.5 text-[11px] font-bold text-white shadow-sm transition focus:outline-none focus:ring-1 focus:ring-violet-500 ${
+          className={`flex-1 cursor-pointer rounded px-3 py-1.5 text-[11px] font-bold text-white shadow-sm transition focus:outline-none focus:ring-1 focus:ring-violet-500 ${
             isSubmitting 
               ? 'bg-violet-400 cursor-not-allowed' 
               : 'bg-violet-600 hover:bg-violet-700'
@@ -239,7 +253,7 @@ const SightingForm = ({
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="flex-1 rounded border border-gray-200 bg-gray-100 px-3 py-1.5 text-[11px] font-bold text-gray-700 transition hover:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-gray-300 disabled:opacity-50"
+          className="flex-1 cursor-pointer rounded border border-gray-200 bg-gray-100 px-3 py-1.5 text-[11px] font-bold text-gray-700 transition hover:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-gray-300 disabled:opacity-50"
         >
           Cancel
         </button>

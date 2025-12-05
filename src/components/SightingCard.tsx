@@ -154,7 +154,7 @@ const SightingCard: React.FC<SightingCardProps> = ({
               className={`rounded px-2 py-1 text-[12px] font-semibold transition ${
                 hasConfirmed || isUpvotePending || !isAuthenticated
                   ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                  : 'bg-green-600 text-white hover:bg-green-700'
+                  : 'cursor-pointer bg-green-600 text-white hover:bg-green-700'
               }`}
             >
               {!isAuthenticated
