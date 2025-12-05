@@ -8,8 +8,8 @@
  */
 
 import {setGlobalOptions} from "firebase-functions";
-import {onRequest} from "firebase-functions/https";
-import * as logger from "firebase-functions/logger";
+import { User } from "./User";
+import * as admin from "firebase-admin";
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
@@ -26,28 +26,48 @@ import * as logger from "firebase-functions/logger";
 // this will be the maximum concurrent request count.
 setGlobalOptions({ maxInstances: 10 });
 const { onValueCreated } = require("firebase-functions/database");
-const admin = require("firebase-admin");
+
 admin.initializeApp();
+const db = admin.database();
+const firestore = admin.firestore();
+const usersRef = db.ref('/users');
+
 
 // Triggered when a new sighting is created under /sightings/{pushId}
 export const onDatabaseWrite = onValueCreated("/sightings/{pushId}", async (event: any) => {
   try {
     // Read the users path from the Realtime Database
-    const usersRef = admin.database().ref('/users');
     const usersSnap = await usersRef.once('value');
     const users = usersSnap.val();
 
     const emails: string[] = [];
     if (users && typeof users === 'object') {
-      Object.values(users).forEach((u: any) => {
+      const userRecords = users as Record<string, User>;
+      Object.values(userRecords).forEach((u) => {
         if (u && (u.email)) {
           emails.push(u.email);
         }
       });
     }
-    const bccList = emails.join(",")
+    
+    // send notification emails, fan-out updates, etc. using SendGrid or similar
+    const mailRef = firestore.collection("/mail");
+    const sighting = event.data.val();
 
-    // TODO: send notification emails, fan-out updates, etc. using SendGrid or similar
+    await mailRef.add({
+      bcc: emails, // Use the array of emails
+      message: {
+        subject: `New ICE Sighting Reported: ${sighting.title}`,
+        html: `
+          <h1>A new ICE sighting has been reported</h1>
+          <p><strong>Title:</strong> ${sighting.title}</p>
+          <p><strong>Location:</strong> ${sighting.location}</p>
+          <p><strong>Time:</strong> ${new Date(sighting.time).toLocaleString()}</p>
+          <p><strong>Description:</strong> ${sighting.description || "N/A"}</p>
+          <p>Check the app for more details.</p>
+        `,
+      },
+    });
 
     // Return a small summary for visibility in logs/emulator
     return { emailsCount: emails.length };
