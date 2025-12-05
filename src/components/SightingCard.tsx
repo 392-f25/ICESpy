@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Sighting } from '../types/Sighting.ts';
+import { CATEGORY_COLORS } from '../types/Sighting.ts';
 
 interface SightingCardProps {
   sighting: Sighting;
@@ -119,6 +120,19 @@ const SightingCard: React.FC<SightingCardProps> = ({
             </button>
           )}
         </div>
+
+        {/* Category Tag */}
+        {sighting.category && (
+          <div className="mb-2">
+            <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+              CATEGORY_COLORS[sighting.category].bg
+            } ${
+              CATEGORY_COLORS[sighting.category].text
+            }`}>
+              {sighting.category}
+            </span>
+          </div>
+        )}
 
         <div className="mb-2 space-y-1 text-[12px] text-gray-600">
           <div>Location: {sighting.location}</div>

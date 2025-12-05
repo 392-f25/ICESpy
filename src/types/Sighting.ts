@@ -1,3 +1,5 @@
+export type SightingCategory = 'ICE activity' | 'police activity' | 'accident' | 'crime' | 'lost items';
+
 export type Sighting ={
     id: string;
     firebaseKey?: string;
@@ -8,5 +10,14 @@ export type Sighting ={
     imageUrls?: string[];
     upvotes: number;
     corroborationCount?: number;
+    category: SightingCategory;
 }
+
+export const CATEGORY_COLORS: Record<SightingCategory, { bg: string; text: string; pin: string }> = {
+  'ICE activity': { bg: 'bg-red-100', text: 'text-red-800', pin: '#ef4444' },
+  'police activity': { bg: 'bg-blue-100', text: 'text-blue-800', pin: '#3b82f6' },
+  'accident': { bg: 'bg-yellow-100', text: 'text-yellow-800', pin: '#eab308' },
+  'crime': { bg: 'bg-purple-100', text: 'text-purple-800', pin: '#a855f7' },
+  'lost items': { bg: 'bg-green-100', text: 'text-green-800', pin: '#22c55e' },
+};
 

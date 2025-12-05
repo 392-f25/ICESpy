@@ -208,6 +208,7 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
           ? firebaseSighting.upvotes
           : firebaseSighting.corroborationCount || 0,
       corroborationCount: firebaseSighting.corroborationCount,
+      category: firebaseSighting.category || 'ICE activity',
     };
   };
 
@@ -291,7 +292,7 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
               sighting={latestSighting}
               hasUpvoted={!!hasUpvoted}
               isUpvotePending={isPending}
-              isAuthenticated={isAuthenticated}
+              isAuthenticated={isAuthenticatedRef.current}
               onUpvote={handleUpvote}
             />
           );
@@ -332,7 +333,7 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
         lat={lat}
         lng={lng}
         timestamp={currentTime}
-        onSubmit={async ({ title, description, images, location }) => {
+        onSubmit={async ({ title, description, images, location, category }) => {
           const sightingId = generateSightingId();
 
           // upload any images to Firebase storage, using uploadImage().
@@ -358,6 +359,7 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
             description,
             imageUrls: imageURLs.length > 0 ? imageURLs : [],
             upvotes: 0,
+            category,
           };
 
           const toPush = {
