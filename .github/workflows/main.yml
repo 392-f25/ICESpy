@@ -27,4 +27,4 @@ jobs:
       - run: npm install
       - run: npm run build
       - run: npm install -g firebase-tools
-      - run: firebase deploy --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive
+      - run: firebase deploy --project icespy-392 --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive
