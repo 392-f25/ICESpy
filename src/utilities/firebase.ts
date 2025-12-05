@@ -122,16 +122,38 @@ export const listenToSightings = (callback: (sightings: any[]) => void) => {
 };
 
 export const incrementSightingUpvotes = async (firebaseKey: string): Promise<number> => {
+  if (!firebaseKey) {
+    throw new Error('Missing firebaseKey for upvote');
+  }
+
   const upvotesRef = dbRef(realtimeDb, `sightings/${firebaseKey}/upvotes`);
 
-  const result = await runTransaction(upvotesRef, (current) => {
-    if (typeof current === 'number') {
-      return current + 1;
-    }
-    return 1;
-  });
+  try {
+    const result = await runTransaction(upvotesRef, (current) => {
+      if (typeof current === 'number') {
+        return current + 1;
+      }
+      return 1;
+    });
 
-  return result.snapshot?.val() ?? 0;
+    if (result.committed) {
+      return result.snapshot?.val() ?? 0;
+    }
+  } catch (error) {
+    console.error('Upvote transaction failed, attempting fallback set:', error);
+  }
+
+  // Fallback: read once and set (not as safe as transaction but better than silent failure)
+  try {
+    const snapshot = await get(upvotesRef);
+    const current = snapshot.exists() && typeof snapshot.val() === 'number' ? snapshot.val() : 0;
+    const next = current + 1;
+    await set(upvotesRef, next);
+    return next;
+  } catch (error) {
+    console.error('Upvote fallback set failed:', error);
+    throw error;
+  }
 };
 
 export const useAuthState = () => {

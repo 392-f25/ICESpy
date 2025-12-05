@@ -4,6 +4,7 @@ import SightingForm from './SightingForm.tsx';
 import { createPinMarker } from './Pin.tsx';
 import SightingCard from './SightingCard.tsx';
 import type { Sighting } from '../types/Sighting.ts';
+import type { User } from 'firebase/auth';
 import {
   dbPush,
   dbRef,
@@ -38,6 +39,7 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
   const upvotedSightingsRef = useRef<Set<string>>(new Set());
   const upvoteStorageKeyRef = useRef<string>('upvotedSightings:guest');
   const [pendingUpvoteId, setPendingUpvoteId] = useState<string | null>(null);
+  const userRef = useRef<User | null>(null);
   // track loaded firebase keys in a ref so updates don't trigger rerenders
   const loadedFirebaseSightingsRef = useRef<Set<string>>(new Set());
   const unsubscribeRef = useRef<(() => void) | null>(null);
@@ -101,6 +103,10 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
   }, [isAuthenticated]);
 
   useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  useEffect(() => {
     const storageKey = user
       ? `upvotedSightings:${user.uid}`
       : 'upvotedSightings:guest';
@@ -148,10 +154,11 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
   };
 
   const handleUpvote = async (sighting: Sighting) => {
-    const sightingKey = getSightingKey(sighting);
+    const sightingKey = getSightingKey(sighting) || sighting.id;
     if (!sightingKey) return;
 
-    if (!user) {
+    const currentUser = userRef.current;
+    if (!currentUser) {
       console.warn('User must be signed in to upvote');
       return;
     }
@@ -170,9 +177,11 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
 
       setSightings((prev) => {
         const updated = new Map(prev);
-        const existing = updated.get(sightingKey) || sighting;
+        const existing =
+          updated.get(sightingKey) || { ...sighting, firebaseKey: sightingKey };
         updated.set(sightingKey, {
           ...existing,
+          firebaseKey: sightingKey,
           upvotes:
             typeof newCount === 'number'
               ? newCount
@@ -192,7 +201,7 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
     const firebaseKey = firebaseSighting.firebaseKey || firebaseSighting.id;
 
     return {
-      id: firebaseSighting.id || firebaseKey || generateSightingId(),
+      id: firebaseKey || firebaseSighting.id || generateSightingId(),
       firebaseKey,
       title: firebaseSighting.title || 'ICE Sighting',
       location:
@@ -312,7 +321,7 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
       loadedFirebaseSightingsRef.current.add(sightingKey);
       setSightings((prev) => {
         const updated = new Map(prev);
-        updated.set(sightingKey, sighting);
+        updated.set(sightingKey, { ...sighting, firebaseKey: sightingKey });
         sightingsRef.current = updated;
         return updated;
       });
