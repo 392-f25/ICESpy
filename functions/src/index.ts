@@ -63,7 +63,6 @@ export const onDatabaseWrite = onValueCreated("/sightings/{pushId}", async (even
           <h1>A new Prairie Dog sighting has been reported</h1>
           <p><strong>Title:</strong> ${sighting.title}</p>
           <p><strong>Location:</strong> ${sighting.location}</p>
-          <p><strong>Time:</strong> ${new Date(sighting.time).toLocaleString()}</p>
           <p><strong>Description:</strong> ${sighting.description || "N/A"}</p>
           <p>Check the app for more details.</p>
         `,
