@@ -18,8 +18,8 @@ vi.mock('./utilities/firebase', () => ({
 
 describe('App component tests', () => {
     
-  test("App renders with map instruction text", () => {
+  test("App renders with sign in message when not authenticated", () => {
     render(<App />);
-    expect(screen.getByText('Click on the map to add a pin for an ICE sighting.')).toBeDefined();
+    expect(screen.getByText('Sign in to add a pin. You can still browse existing sightings.')).toBeDefined();
   });
 });

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import type { Sighting } from '../types/Sighting.ts';
+import type { Sighting, SightingCategory } from '../types/Sighting.ts';
 import { getAddressFromCoords } from './Address.tsx';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -15,6 +15,7 @@ interface SightingFormProps {
     time: Date;
     description?: string;
     images?: File[];
+    category: SightingCategory;
   }) => void;
   onCancel: () => void;
   existingSighting?: Sighting;
@@ -29,7 +30,8 @@ const sightingSchema = z.object({
     return !isNaN(d.getTime());
   }, "Date must match format: 11/20/2025, 6:17 PM"),
   description: z.string().max(500, 'Description must be less than 500 characters').optional(),
-  images: z.array(z.instanceof(File)).optional()
+  images: z.array(z.instanceof(File)).optional(),
+  category: z.enum(['ICE activity', 'police activity', 'accident', 'crime', 'lost items'])
 });
 
 type SightingFormData = z.infer<typeof sightingSchema>;
@@ -60,7 +62,8 @@ const SightingForm = ({
       location: `${lat}, ${lng}`,
       time: timestamp.toLocaleString(),
       description: existingSighting?.description || '',
-      images: []
+      images: [],
+      category: existingSighting?.category || 'ICE activity'
     }
   });
 
@@ -75,6 +78,7 @@ const SightingForm = ({
       time: timeToDate,
       description: data.description || 'No additional information',
       images: imageFiles.length > 0 ? imageFiles : undefined,
+      category: data.category,
     });
   };
 
@@ -153,6 +157,26 @@ const SightingForm = ({
         />
         {errors.time && (
           <p className="mt-1 text-[10px] text-red-600">{errors.time.message}</p>
+        )}
+      </div>
+
+      {/* Category Field */}
+      <div className="mb-2">
+        <label className="mb-1 block text-[11px] font-bold">
+          Category:
+        </label>
+        <select
+          {...register('category')}
+          className="w-full rounded border border-gray-200 bg-white px-1 py-1 text-[11px]"
+        >
+          <option value="ICE activity">ICE activity</option>
+          <option value="police activity">police activity</option>
+          <option value="accident">accident</option>
+          <option value="crime">crime</option>
+          <option value="lost items">lost items</option>
+        </select>
+        {errors.category && (
+          <p className="mt-1 text-[10px] text-red-600">{errors.category.message}</p>
         )}
       </div>
 
