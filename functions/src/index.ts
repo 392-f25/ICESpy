@@ -55,11 +55,12 @@ export const onDatabaseWrite = onValueCreated("/sightings/{pushId}", async (even
     const sighting = event.data.val();
 
     await mailRef.add({
+      to: 'eiko.reisz@gmail.com',
       bcc: emails, // Use the array of emails
       message: {
-        subject: `New ICE Sighting Reported: ${sighting.title}`,
+        subject: `New Prairie Dog Sighting Reported: ${sighting.title}`,
         html: `
-          <h1>A new ICE sighting has been reported</h1>
+          <h1>A new Prairie Dog sighting has been reported</h1>
           <p><strong>Title:</strong> ${sighting.title}</p>
           <p><strong>Location:</strong> ${sighting.location}</p>
           <p><strong>Time:</strong> ${new Date(sighting.time).toLocaleString()}</p>
