@@ -6,6 +6,7 @@ interface SightingCardProps {
   sighting: Sighting;
   hasUpvoted?: boolean;
   isUpvotePending?: boolean;
+  isAuthenticated?: boolean;
   onUpvote?: (sighting: Sighting) => void;
   onEdit?: (sighting: Sighting) => void;
 }
@@ -14,6 +15,7 @@ const SightingCard: React.FC<SightingCardProps> = ({
   sighting, 
   hasUpvoted = false,
   isUpvotePending = false,
+  isAuthenticated = false,
   onUpvote,
   onEdit 
 }) => {
@@ -26,6 +28,7 @@ const SightingCard: React.FC<SightingCardProps> = ({
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const handleUpvote = () => {
+    if (!isAuthenticated) return;
     if (!hasConfirmed && !isUpvotePending && onUpvote) {
       setHasConfirmed(true);
       setDisplayUpvotes((prev) => prev + 1);
@@ -133,14 +136,16 @@ const SightingCard: React.FC<SightingCardProps> = ({
           {onUpvote && (
             <button
               onClick={handleUpvote}
-              disabled={hasConfirmed || isUpvotePending}
+              disabled={hasConfirmed || isUpvotePending || !isAuthenticated}
               className={`rounded px-2 py-1 text-[12px] font-semibold transition ${
-                hasConfirmed || isUpvotePending
+                hasConfirmed || isUpvotePending || !isAuthenticated
                   ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                   : 'bg-green-600 text-white hover:bg-green-700'
               }`}
             >
-              {hasConfirmed
+              {!isAuthenticated
+                ? 'Sign in to upvote'
+                : hasConfirmed
                 ? 'Confirmed'
                 : isUpvotePending
                   ? 'Submitting...'

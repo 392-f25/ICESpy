@@ -44,7 +44,8 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
   const [newSightingNotification, setNewSightingNotification] = useState<
     string | null
   >(null);
-  const { user } = useAuthState();
+  const { user, isAuthenticated } = useAuthState();
+  const isAuthenticatedRef = useRef<boolean>(false);
 
   const getSightingKey = (sighting: Pick<Sighting, 'id' | 'firebaseKey'>) =>
     sighting.firebaseKey || sighting.id;
@@ -96,6 +97,10 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
   }, [upvotedSightings]);
 
   useEffect(() => {
+    isAuthenticatedRef.current = isAuthenticated;
+  }, [isAuthenticated]);
+
+  useEffect(() => {
     const storageKey = user
       ? `upvotedSightings:${user.uid}`
       : 'upvotedSightings:guest';
@@ -145,6 +150,11 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
   const handleUpvote = async (sighting: Sighting) => {
     const sightingKey = getSightingKey(sighting);
     if (!sightingKey) return;
+
+    if (!user) {
+      console.warn('User must be signed in to upvote');
+      return;
+    }
 
     if (upvotedSightingsRef.current.has(sightingKey)) {
       return;
@@ -281,6 +291,7 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
               sighting={latestSighting}
               hasUpvoted={!!hasUpvoted}
               isUpvotePending={isPending}
+              isAuthenticated={isAuthenticated}
               onUpvote={handleUpvote}
             />
           );
@@ -516,6 +527,10 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
       infoWindow.current = new InfoWindow();
 
       mapInstance.current.addListener('click', (event: any) => {
+        if (!isAuthenticatedRef.current) {
+          return;
+        }
+
         if (event.latLng) {
           showSightingForm(event.latLng, AdvancedMarkerElement, PinElement);
         }
@@ -559,7 +574,9 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
     <div className="relative w-full h-full">
       <div ref={mapRef} className={className} />
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white py-2 px-4 rounded-lg shadow-lg z-10 text-sm">
-        Click on the map to add a pin for an ICE sighting.
+        {isAuthenticated
+          ? 'Click on the map to add a pin for an ICE sighting.'
+          : 'Sign in to add a pin. You can still browse existing sightings.'}
       </div>
 
       {/* New sighting notification */}
