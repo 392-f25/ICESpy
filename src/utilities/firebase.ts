@@ -156,6 +156,43 @@ export const incrementSightingUpvotes = async (firebaseKey: string): Promise<num
   }
 };
 
+export const decrementSightingUpvotes = async (firebaseKey: string): Promise<number> => {
+  if (!firebaseKey) {
+    throw new Error('Missing firebaseKey for downvote');
+  }
+
+  const upvotesRef = dbRef(realtimeDb, `sightings/${firebaseKey}/upvotes`);
+
+  try {
+    const result = await runTransaction(upvotesRef, (current) => {
+      // Only decrement if the current value is a number greater than 0
+      if (typeof current === 'number' && current > 0) {
+        return current - 1;
+      }
+      // Otherwise, return the current value to prevent it from dropping below 0
+      return 0;
+    });
+
+    if (result.committed) {
+      return result.snapshot?.val() ?? 0;
+    }
+  } catch (error) {
+    console.error('Downvote transaction failed, attempting fallback set:', error);
+  }
+
+  // Fallback (less safe): read once and set
+  try {
+    const snapshot = await get(upvotesRef);
+    const current = snapshot.exists() && typeof snapshot.val() === 'number' ? snapshot.val() : 0;
+    const next = Math.max(0, current - 1); // Ensure result is not negative
+    await set(upvotesRef, next);
+    return next;
+  } catch (error) {
+    console.error('Downvote fallback set failed:', error);
+    throw error;
+  }
+};
+
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(true);

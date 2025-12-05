@@ -10,6 +10,7 @@ import {
   dbRef,
   dbServerTimestamp,
   incrementSightingUpvotes,
+  decrementSightingUpvotes,
   realtimeDb,
   listenToSightings,
   useAuthState,
@@ -197,6 +198,44 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
     }
   };
 
+  const handleDownvote = async (sighting: Sighting) => {
+    const sightingKey = getSightingKey(sighting) || sighting.id;
+    if (!sightingKey || !userRef.current) return;
+
+    // Check if the user has actually upvoted locally
+    if (!upvotedSightingsRef.current.has(sightingKey)) {
+      return;
+    }
+
+    try {
+      setPendingUpvoteId(sightingKey);
+      const newCount = await decrementSightingUpvotes(sightingKey); // Use the new function
+
+      // Remove the key from the local tracking set
+      const updatedUpvotes = new Set(upvotedSightingsRef.current);
+      updatedUpvotes.delete(sightingKey);
+      persistUpvotedSightings(updatedUpvotes); // Update storage and state
+
+      // Update local sightings state map with the new count
+      setSightings((prev) => {
+        const updated = new Map(prev);
+        const existing = updated.get(sightingKey) || { ...sighting, firebaseKey: sightingKey };
+        updated.set(sightingKey, {
+          ...existing,
+          firebaseKey: sightingKey,
+          upvotes: typeof newCount === 'number' ? newCount : Math.max(0, (existing.upvotes || 0) - 1),
+        });
+        sightingsRef.current = updated;
+        return updated;
+      });
+
+    } catch (error) {
+      console.error('Failed to downvote sighting:', error);
+    } finally {
+      setPendingUpvoteId(null);
+    }
+  };
+
   const mapFirebaseSightingToSighting = (firebaseSighting: any): Sighting => {
     const firebaseKey = firebaseSighting.firebaseKey || firebaseSighting.id;
 
@@ -303,6 +342,7 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
               isUpvotePending={isPending}
               isAuthenticated={isAuthenticatedRef.current}
               onUpvote={handleUpvote}
+              onDownvote={handleDownvote}
             />
           );
 

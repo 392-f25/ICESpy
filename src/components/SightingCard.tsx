@@ -9,6 +9,7 @@ interface SightingCardProps {
   isUpvotePending?: boolean;
   isAuthenticated?: boolean;
   onUpvote?: (sighting: Sighting) => void;
+  onDownvote?: (sighting: Sighting) => void;
   onEdit?: (sighting: Sighting) => void;
 }
 
@@ -18,6 +19,7 @@ const SightingCard: React.FC<SightingCardProps> = ({
   isUpvotePending = false,
   isAuthenticated = false,
   onUpvote,
+  onDownvote,
   onEdit 
 }) => {
   const [hasConfirmed, setHasConfirmed] = useState(hasUpvoted);
@@ -29,11 +31,19 @@ const SightingCard: React.FC<SightingCardProps> = ({
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const handleUpvote = () => {
-    if (!isAuthenticated) return;
-    if (!hasConfirmed && !isUpvotePending && onUpvote) {
-      setHasConfirmed(true);
-      setDisplayUpvotes((prev) => prev + 1);
-      onUpvote(sighting);
+    if (!isAuthenticated || isUpvotePending) return;
+    if (hasConfirmed) {
+      if (onDownvote) {
+        setHasConfirmed(false);
+        setDisplayUpvotes((prev) => Math.max(0, prev - 1));
+        onDownvote(sighting);
+      }
+    } else {
+      if (onUpvote) {
+        setHasConfirmed(true);
+        setDisplayUpvotes((prev) => prev + 1);
+        onUpvote(sighting);
+      }
     }
   };
 
@@ -150,17 +160,21 @@ const SightingCard: React.FC<SightingCardProps> = ({
           {onUpvote && (
             <button
               onClick={handleUpvote}
-              disabled={hasConfirmed || isUpvotePending || !isAuthenticated}
+              disabled={isUpvotePending || !isAuthenticated} 
               className={`rounded px-2 py-1 text-[12px] font-semibold transition ${
-                hasConfirmed || isUpvotePending || !isAuthenticated
+                !isAuthenticated
                   ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                  : 'cursor-pointer bg-green-600 text-white hover:bg-green-700'
+                  : hasConfirmed 
+                    ? 'cursor-pointer bg-red-600 text-white hover:bg-red-700'
+                    : isUpvotePending
+                      ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                      : 'cursor-pointer bg-green-600 text-white hover:bg-green-700'
               }`}
             >
               {!isAuthenticated
                 ? 'Sign in to upvote'
                 : hasConfirmed
-                ? 'Confirmed'
+                ? 'Undo Confirmation'
                 : isUpvotePending
                   ? 'Submitting...'
                   : 'I saw this too!'}
