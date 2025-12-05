@@ -30,7 +30,6 @@ const SIGHTING_CATEGORIES: SightingCategory[] = [
   'Other',
 ];
 
-// Updated Zod schema to match your form structure
 const sightingSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   location: z.string().min(1, 'Location is required'),
@@ -40,7 +39,7 @@ const sightingSchema = z.object({
   }, "Date must match format: 11/20/2025, 6:17 PM"),
   description: z.string().max(500, 'Description must be less than 500 characters').optional(),
   images: z.array(z.instanceof(File)).optional(),
-  category: z.enum(SIGHTING_CATEGORIES)
+  category: z.enum(SIGHTING_CATEGORIES as [string, ...string[]])
 });
 
 type SightingFormData = z.infer<typeof sightingSchema>;
@@ -57,7 +56,6 @@ const SightingForm = ({
   const [location, setLocation] = useState<string>(`${lat}, ${lng}`);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Initialize react-hook-form with Zod validation
   const {
     register,
     handleSubmit,
@@ -67,7 +65,7 @@ const SightingForm = ({
   } = useForm<SightingFormData>({
     resolver: zodResolver(sightingSchema),
     defaultValues: {
-      title: 'ICE Sighting',
+      title: existingSighting?.title || '', // Default to empty so user enters one
       location: `${lat}, ${lng}`,
       time: timestamp.toLocaleString(),
       description: existingSighting?.description || '',
@@ -76,7 +74,6 @@ const SightingForm = ({
     }
   });
 
-  // Watch for description changes to display character count
   const description = watch('description');
 
   const onFormSubmit = (data: SightingFormData) => {
@@ -86,8 +83,9 @@ const SightingForm = ({
       location: data.location,
       time: timeToDate,
       description: data.description || 'No additional information',
+      // We use the local state imageFiles here, which is why z.any() is safe
       images: imageFiles.length > 0 ? imageFiles : undefined,
-      category: data.category,
+      category: data.category as SightingCategory,
     });
   };
 
@@ -130,12 +128,50 @@ const SightingForm = ({
 
   return (
     <form
-      onSubmit={handleSubmit(onFormSubmit)}
+      onSubmit={handleSubmit(onFormSubmit, (errors) => console.log("Form Errors:", errors))}
       className="w-[280px] p-2 font-sans text-sm text-gray-900"
     >
       <h3 className="mb-2 text-sm font-semibold text-gray-800">
-        {existingSighting ? 'Edit ICE Sighting' : 'New ICE Sighting'}
+        {existingSighting ? 'Edit Report' : 'New Report'}
       </h3>
+
+      {/* Title Field */}
+      <div className="mb-2">
+        <label className="mb-1 block text-[11px] font-bold">
+          Title:
+        </label>
+        <input
+          type="text"
+          {...register('title')}
+          placeholder="e.g., Lost Keys, Car Accident, Checkpoint"
+          className="w-full rounded border border-gray-200 bg-white px-1 py-1 text-[11px]"
+        />
+        {errors.title && (
+          <p className="mt-1 text-[10px] text-red-600">{errors.title.message}</p>
+        )}
+      </div>
+
+
+      {/* Category Field */}
+      <div className="mb-2">
+        <label className="mb-1 block text-[11px] font-bold">
+          Category:
+        </label>
+        <select
+          {...register('category')}
+          className="w-full cursor-pointer rounded border border-gray-200 bg-white px-1 py-1 text-[11px]"
+        >
+          {SIGHTING_CATEGORIES.map((category) => (
+            <option key={category} value={category}>
+              {category}
+            </option>
+          ))}
+        </select>
+        {errors.category && (
+          <p className="mt-1 text-[10px] text-red-600">{errors.category.message}</p>
+        )}
+      </div>
+
 
       {/* Location Field */}
       <div className="mb-2">
@@ -166,31 +202,6 @@ const SightingForm = ({
         />
         {errors.time && (
           <p className="mt-1 text-[10px] text-red-600">{errors.time.message}</p>
-        )}
-      </div>
-
-      {/* Category Field */}
-      <div className="mb-2">
-        <label className="mb-1 block text-[11px] font-bold">
-          Category:
-        </label>
-        <select
-          {...register('category')}
-          className="w-full cursor-pointer rounded border border-gray-200 bg-white px-1 py-1 text-[11px]"
-        >
-          {/* Add a default/placeholder option if needed */}
-          <option value="">Select a category</option> 
-          
-          {/* Map over the SIGHTING_CATEGORIES array */}
-          {SIGHTING_CATEGORIES.map((category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
-          
-        </select>
-        {errors.category && (
-          <p className="mt-1 text-[10px] text-red-600">{errors.category.message}</p>
         )}
       </div>
 

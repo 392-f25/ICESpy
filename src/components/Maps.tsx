@@ -203,7 +203,7 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
     return {
       id: firebaseKey || firebaseSighting.id || generateSightingId(),
       firebaseKey,
-      title: firebaseSighting.title || 'ICE Sighting',
+      title: firebaseSighting.title || firebaseSighting.category || 'Sighting',
       location:
         firebaseSighting.location ||
         `${firebaseSighting.lat}, ${firebaseSighting.lng}`,
@@ -453,10 +453,12 @@ const Maps: React.FC<MapsProps> = ({ className = 'w-full h-full' }) => {
               `${firebaseSighting.lat?.toFixed(
                 4
               )}, ${firebaseSighting.lng?.toFixed(4)}`;
+            
+            // UPDATE: Use the title from the object, or fallback to Category
+            const notificationTitle = firebaseSighting.title || firebaseSighting.category || 'New Sighting';
+
             setNewSightingNotification(
-              `New sighting reported: ${
-                firebaseSighting.title || 'ICE Sighting'
-              } at ${location}`
+              `New sighting reported: ${notificationTitle} at ${location}`
             );
             setTimeout(() => setNewSightingNotification(null), 5000);
           }
